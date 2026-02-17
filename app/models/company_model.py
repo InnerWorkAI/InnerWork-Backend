@@ -1,13 +1,13 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum
+from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 from app.db.base import Base
-from app.enums.user_role import UserRole  # enum que definiremos
 
-class UserModel(Base):
-    __tablename__ = "user"
+class CompanyModel(Base):
+    __tablename__ = "company"
 
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(150), nullable=False)
     email = Column(String(150), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), nullable=False)
+    address = Column(String(255))
     created_at = Column(DateTime, default=datetime.now, nullable=False)
