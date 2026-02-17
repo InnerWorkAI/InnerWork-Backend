@@ -1,0 +1,22 @@
+# Framework
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+psycopg2-binary
+
+
+# Validation / Settings
+pydantic
+pydantic-settings
+
+# Auth
+python-jose[cryptography]
+passlib[bcrypt]
+
+# Cache
+redis
+
+# Environment variables
+python-dotenv
