@@ -1,8 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
-from app.enums.user_role import UserRole
-
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=4, max_length=72, description="Password must be between 4 and 72 characters")

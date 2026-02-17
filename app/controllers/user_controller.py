@@ -23,7 +23,7 @@ def get_users(db: Session = Depends(get_db)):
 def get_user(user_id: int, db: Session = Depends(get_db)):
     return UserService.get_user_by_id(db, user_id)
 
-####### Podir token para poder cambiar la contraseña, pero por ahora lo dejo así para probar la funcionalidad #######
+####### Pedir token para poder cambiar la contraseña, pero por ahora lo dejo así para probar la funcionalidad #######
 @router.put("/{user_id}/password", response_model=UserResponse)
 def update_user_password(
     user_id: int,

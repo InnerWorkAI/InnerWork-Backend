@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from app.db.base import Base
 from app.db.session import engine
 from app.core.openapi_config import custom_openapi
-from app.controllers import test, user_controller
+from app.controllers import test, user_controller, company_controller
 
 
 # Api configuration
@@ -23,3 +23,4 @@ Base.metadata.create_all(bind=engine)
 # Include routers
 app.include_router(test.router)
 app.include_router(user_controller.router)
+app.include_router(company_controller.router)
