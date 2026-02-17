@@ -19,7 +19,11 @@ class UserRepository:
     @staticmethod
     def get_by_email(db: Session, email: str):
         return db.query(UserModel).filter(UserModel.email == email).first()
-
+    
+    @staticmethod
+    def get_by_id(db: Session, user_id: int):
+        return db.query(UserModel).filter(UserModel.id == user_id).first()
+    
     @staticmethod
     def get_all(db: Session):
         return db.query(UserModel).all()
