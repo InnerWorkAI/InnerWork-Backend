@@ -1,3 +1,4 @@
+from app.models.company_model import CompanyModel
 from sqlalchemy.orm import Session
 from app.models.user_model import UserModel
 
@@ -27,3 +28,8 @@ class UserRepository:
     @staticmethod
     def get_all(db: Session):
         return db.query(UserModel).all()
+
+    @staticmethod
+    def delete(db: Session, user: UserModel):
+        db.delete(user)
+        db.commit()

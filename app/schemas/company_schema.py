@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
@@ -11,8 +12,11 @@ class CompanyResponse(BaseModel):
     id: int
     name: str
     address: str
-    email: EmailStr
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+class CompanyUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=150)
+    address: Optional[str] = Field(None, max_length=255)
