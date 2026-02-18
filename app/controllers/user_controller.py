@@ -40,3 +40,13 @@ def update_my_password(
         current_user,
         password_data.new_password
     )
+
+@router.delete("/")
+def delete_company(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    return UserService.delete_user(
+        db,
+        current_user.id
+    )

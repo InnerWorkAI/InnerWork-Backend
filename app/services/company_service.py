@@ -88,4 +88,7 @@ class CompanyService:
 
         CompanyRepository.delete_company(db, company)
 
-        return {"detail": "Company deleted successfully"}
+        user = UserRepository.get_by_id(db, admin_id)
+        UserRepository.delete(db, user)
+
+        return {"detail": "Company and associated user deleted successfully"}
