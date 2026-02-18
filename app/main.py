@@ -1,10 +1,13 @@
 # Main
+import logging
 from fastapi import FastAPI
 from app.db.base import Base
 from app.db.session import engine
-from app.core.openapi_config import custom_openapi
 from app.controllers import auth_controller, test, user_controller, company_controller
 
+
+# Configurar logger de Uvicorn
+logger = logging.getLogger("uvicorn")
 
 # Api configuration
 app = FastAPI(
@@ -15,9 +18,7 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-app.openapi = lambda: custom_openapi(app)
-
-# Crear tablas automáticamente (solo dev)
+# Create database tables if they don't exist 
 Base.metadata.create_all(bind=engine)
 
 # Include routers
