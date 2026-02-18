@@ -3,8 +3,8 @@ from fastapi import FastAPI
 from app.db.base import Base
 from app.db.session import engine
 from app.core.openapi_config import custom_openapi
-from app.controllers import auth_controller, test, user_controller, company_controller
-
+from app.controllers import auth_controller, test, user_controller, company_controller, weekly_burnout_form_controller
+from app.models.employee_model import EmployeeModel
 
 # Api configuration
 app = FastAPI(
@@ -25,3 +25,4 @@ app.include_router(test.router)
 app.include_router(user_controller.router)
 app.include_router(company_controller.router)
 app.include_router(auth_controller.router)
+app.include_router(weekly_burnout_form_controller.router)
