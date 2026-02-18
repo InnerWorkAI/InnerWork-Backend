@@ -6,14 +6,15 @@ uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 
-
 # Validation / Settings
 pydantic
 pydantic-settings
+email-validator
 
-# Auth
+# Auth / Security
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt
 
 # Cache
 redis
