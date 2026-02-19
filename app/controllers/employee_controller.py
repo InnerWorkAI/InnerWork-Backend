@@ -4,7 +4,7 @@ from typing import List
 from app.db.session import get_db
 from app.core.security import get_current_user
 from app.models.user_model import UserModel
-from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse
+from app.schemas.employee_schema import EmployeeCreate, EmployeeResponse, EmployeeUpdate
 from app.services.employee_service import EmployeeService
 
 router = APIRouter(
@@ -55,6 +55,21 @@ def get_company_employees(
     return EmployeeService.get_company_employees(
         db,
         current_user.id
+    )
+
+
+@router.patch("/{employee_id}", response_model=EmployeeResponse)
+def update_employee(
+    employee_id: int,
+    employee_data: EmployeeUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    return EmployeeService.update_employee(
+        db,
+        current_user.id,
+        employee_id,
+        employee_data
     )
 
 

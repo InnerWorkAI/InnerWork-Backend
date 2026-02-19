@@ -24,6 +24,14 @@ class EmployeeRepository:
         return db.query(EmployeeModel).filter(EmployeeModel.company_id == company_id).all()
 
     @staticmethod
+    def update(db: Session, employee: EmployeeModel, updates: dict):
+        for field, value in updates.items():
+            setattr(employee, field, value)
+        db.commit()
+        db.refresh(employee)
+        return employee
+
+    @staticmethod
     def delete(db: Session, employee: EmployeeModel):
         db.delete(employee)
         db.commit()
