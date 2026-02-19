@@ -1,3 +1,6 @@
+from app.models.user_model import UserModel
+from app.repositories.user_repository import UserRepository
+from app.models.company_admin_model import CompanyAdminModel
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from jose import jwt
@@ -6,7 +9,6 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.repositories.user_repository import UserRepository
 from app.core.config import settings
 
 def hash_password(password: str) -> str:
@@ -42,7 +44,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
-):
+) -> UserModel:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -63,5 +65,7 @@ def get_current_user(
     user = UserRepository.get_by_id(db, int(user_id))
     if user is None:
         raise credentials_exception
+
+    user.role = UserRepository.get_user_role(db, user)
 
     return user
