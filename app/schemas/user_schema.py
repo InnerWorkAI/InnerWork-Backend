@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
 class UserCreate(BaseModel):
@@ -10,6 +11,7 @@ class UserResponse(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
+    role: Optional[str] = None 
 
     class Config:
         from_attributes = True

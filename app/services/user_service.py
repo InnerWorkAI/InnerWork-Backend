@@ -1,5 +1,6 @@
 from app.core.security import hash_password
 from app.models.user_model import UserModel
+from app.models.company_admin_model import CompanyAdminModel
 from sqlalchemy.orm import Session
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_schema import UserCreate
@@ -13,6 +14,9 @@ class UserService:
         user = UserRepository.get_by_id(db, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        user_role = UserRepository.get_user_role(db, user)
+        user.role = user_role
         return user
 
     @staticmethod
