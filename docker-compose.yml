@@ -11,8 +11,24 @@ services:
       - .env.development
     depends_on:
       - redis
+      - db
 
   redis:
     image: redis:7
     ports:
       - "6379:6379"
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: innerwork_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

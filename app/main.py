@@ -1,6 +1,7 @@
 # Main
 import logging
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import Base
 from app.db.session import engine
 from app.controllers import auth_controller, test, user_controller, company_controller, weekly_burnout_form_controller
@@ -16,6 +17,14 @@ app = FastAPI(
     docs_url="/swagger",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8100"], # Permite a tu Ionic/Angular
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Create database tables if they don't exist 
