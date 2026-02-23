@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
@@ -42,3 +42,12 @@ def delete_burnout_form(
     current_user: UserModel = Depends(get_current_user) 
 ):
     return WeeklyBurnoutFormService.delete_form(db, form_id, current_user)
+
+@router.post("/{form_id}/image", response_model=WeeklyBurnoutFormResponse)
+def upload_burnout_form_image(
+    form_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    return WeeklyBurnoutFormService.upload_image(db, form_id, current_user, file)

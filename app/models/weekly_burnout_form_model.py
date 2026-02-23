@@ -20,4 +20,7 @@ class WeeklyBurnoutFormModel(Base):
     business_travel = Column(String(50))
 
     burnout_score = Column(Float)
+    
+    image_url = Column(String(255), nullable=True)
+    
     created_at = Column(Date, default=datetime.now, nullable=False)

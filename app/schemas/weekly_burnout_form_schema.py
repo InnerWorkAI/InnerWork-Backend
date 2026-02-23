@@ -18,9 +18,9 @@ class WeeklyBurnoutFormCreate(BaseModel):
     
     burnout_score: Optional[float] = Field(None, description="Puntaje calculado o ingresado")
 
-# Esto define cómo se ven los datos cuando los devolvemos al usuario
 class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
     id: int
+    image_url: Optional[str] = None  
     created_at: date
 
     class Config:

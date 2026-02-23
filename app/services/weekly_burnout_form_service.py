@@ -1,18 +1,20 @@
+import os
+import shutil
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreate
 from app.models.user_model import UserModel
 from app.models.employee_model import EmployeeModel
 from app.models.company_admin_model import CompanyAdminModel
 
+UPLOAD_DIR = "uploads/burnout_images"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 class WeeklyBurnoutFormService:
 
     @staticmethod
     def _check_permissions(db: Session, form, current_user: UserModel):
-        """
-        Función privada que verifica si el usuario actual tiene derecho a ver/tocar el formulario.
-        """
         employee = db.query(EmployeeModel).filter(EmployeeModel.id == form.employee_id).first()
         if not employee:
             raise HTTPException(status_code=404, detail="El empleado asociado a este formulario no existe")
@@ -28,7 +30,6 @@ class WeeklyBurnoutFormService:
         if is_admin:
             return True
 
-        # 3. Intruso detectado
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permiso para acceder a este formulario"
@@ -63,7 +64,6 @@ class WeeklyBurnoutFormService:
                 detail="Formulario no encontrado"
             )
         
-        # VERIFICACIÓN DE SEGURIDAD
         WeeklyBurnoutFormService._check_permissions(db, form, current_user)
         return form
 
@@ -72,3 +72,19 @@ class WeeklyBurnoutFormService:
         form = WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
         WeeklyBurnoutFormRepository.delete(db, form)
         return {"message": "Formulario eliminado correctamente"}
+
+    @staticmethod
+    def upload_image(db: Session, form_id: int, current_user: UserModel, file: UploadFile):
+        form = WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
+
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="El archivo debe ser una imagen válida")
+
+        file_extension = file.filename.split(".")[-1]
+        file_name = f"form_{form_id}.{file_extension}"
+        file_path = os.path.join(UPLOAD_DIR, file_name)
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        return WeeklyBurnoutFormRepository.update_image(db, form, file_path)
