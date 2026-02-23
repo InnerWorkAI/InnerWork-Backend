@@ -1,4 +1,5 @@
 from http.client import HTTPException
+from app.models.company_admin_model import CompanyAdminModel
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.schemas.company_schema import CompanyCreate, CompanyResponse, CompanyUpdate
@@ -20,9 +21,26 @@ def get_company_(db: Session = Depends(get_db), current_user: UserModel = Depend
     
     return CompanyService.get_company_by_admin_id(db, current_user.id)
 
+@router.get("/admins", tags=["Companies"])
+def list_admins(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    return CompanyService.list_admins(db, current_user.id)
+
+
 @router.post("/", response_model=CompanyResponse)
 def create_company(company: CompanyCreate, db: Session = Depends(get_db)):
     return CompanyService.create_company(db, company)
+
+
+@router.post("/admins/assign")
+def assign_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    return CompanyService.assign_admin_to_company(db, current_user.id, user_id)
 
 @router.put("/", response_model=CompanyResponse)
 def update_company(
