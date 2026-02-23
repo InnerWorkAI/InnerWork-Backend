@@ -208,5 +208,7 @@ __marimo__/
 
 # Environment variable files
 .env*
-
+# Database files
 *.db
+# Uploaded media files
+/uploads

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
@@ -23,6 +23,21 @@ def create_employee(
         db,
         current_user.id,
         employee_data
+    )
+
+
+@router.post("/{employee_id}/profile-image", response_model=EmployeeResponse)
+async def change_profile_image(
+    employee_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    return await EmployeeService.change_profile_image(
+        db,
+        current_user.id,
+        employee_id,
+        file
     )
 
 
