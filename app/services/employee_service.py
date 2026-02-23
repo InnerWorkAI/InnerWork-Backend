@@ -1,13 +1,14 @@
 import os
 import uuid
-from fastapi import HTTPException
+from app.services.email_service import send_reset_email
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.repositories.employee_repository import EmployeeRepository
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.user_repository import UserRepository
 from app.models.employee_model import EmployeeModel
 from app.schemas.employee_schema import EmployeeCreate, EmployeeUpdate
-from app.core.security import hash_password
+from app.core.security import create_reset_token, generate_temporary_password, hash_password
 
 UPLOAD_DIR = "uploads/profile_images"
 
@@ -24,12 +25,12 @@ class EmployeeService:
         if company and company.id == employee.company_id:
             return
 
-        raise HTTPException(status_code=403, detail="Not authorized")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
     @staticmethod
     def _save_image(file):
         if file.content_type not in ["image/jpeg", "image/png"]:
-            raise HTTPException(status_code=400, detail="Only JPG and PNG allowed")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only JPG and PNG allowed")
 
         os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -51,19 +52,22 @@ class EmployeeService:
 
 
     @staticmethod
-    def create_employee(db: Session, admin_id: int, data: EmployeeCreate):
+    async def create_employee(db: Session, admin_id: int, data: EmployeeCreate):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
-            raise HTTPException(status_code=403, detail="Not authorized")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
         existing_user = UserRepository.get_by_email(db, data.email)
         if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+        temp_password = generate_temporary_password()
 
         user = UserRepository.create(
             db,
             email=data.email,
-            password=hash_password(data.password)
+            password=hash_password(temp_password),
+            is_active=False
         )
 
         employee = EmployeeModel(
@@ -91,14 +95,20 @@ class EmployeeService:
             percent_salary_hike=data.percent_salary_hike
         )
 
-        return EmployeeRepository.create(db, employee)
+        employee = EmployeeRepository.create(db, employee)
+
+        token = create_reset_token(user.id)
+
+        await send_reset_email(user.email, token)
+
+        return employee
 
 
     @staticmethod
     async def change_profile_image(db: Session, current_user_id: int, employee_id: int, file):
         employee = EmployeeRepository.get_by_id(db, employee_id)
         if not employee:
-            raise HTTPException(status_code=404, detail="Employee not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         EmployeeService._check_employee_permissions(db, current_user_id, employee)
 
@@ -117,7 +127,7 @@ class EmployeeService:
         employee = EmployeeRepository.get_by_id(db, employee_id)
 
         if not employee:
-            raise HTTPException(status_code=404, detail="Employee not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         EmployeeService._check_employee_permissions(db, current_user_id, employee)
 
@@ -128,7 +138,7 @@ class EmployeeService:
         employee = EmployeeRepository.get_by_user_id(db, user_id)
 
         if not employee:
-            raise HTTPException(status_code=404, detail="Employee not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         return employee
 
@@ -136,7 +146,7 @@ class EmployeeService:
     def get_company_employees(db: Session, admin_id: int):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
-            raise HTTPException(status_code=403, detail="Not authorized")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
         return EmployeeRepository.get_by_company_id(db, company.id)
 
@@ -145,7 +155,7 @@ class EmployeeService:
     def update_employee(db: Session, current_user_id: int, employee_id: int, data: EmployeeUpdate):
         employee = EmployeeRepository.get_by_id(db, employee_id)
         if not employee:
-            raise HTTPException(status_code=404, detail="Employee not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         EmployeeService._check_employee_permissions(db, current_user_id, employee)
 
@@ -156,11 +166,11 @@ class EmployeeService:
     def delete_employee(db: Session, admin_id: int, employee_id: int):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
-            raise HTTPException(status_code=403, detail="Not authorized")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
         employee = EmployeeRepository.get_by_id(db, employee_id)
         if not employee or employee.company_id != company.id:
-            raise HTTPException(status_code=404, detail="Employee not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         EmployeeService._delete_image(employee.profile_image_url)
 
