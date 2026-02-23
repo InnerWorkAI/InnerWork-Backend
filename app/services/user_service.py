@@ -4,7 +4,7 @@ from app.models.company_admin_model import CompanyAdminModel
 from sqlalchemy.orm import Session
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_schema import UserCreate
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 
 class UserService:
@@ -13,7 +13,7 @@ class UserService:
     def get_user_by_id(db: Session, user_id: int):
         user = UserRepository.get_by_id(db, user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
         user_role = UserRepository.get_user_role(db, user)
         user.role = user_role
@@ -28,7 +28,7 @@ class UserService:
         existing_user = UserRepository.get_by_email(db, user_data.email)
 
         if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
         hashed_pw = hash_password(user_data.password)
 
@@ -52,7 +52,7 @@ class UserService:
 
         if not user:
             raise HTTPException(
-                status_code=404,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
 

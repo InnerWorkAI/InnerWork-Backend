@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.repositories.user_repository import UserRepository
 from app.repositories.company_repository import CompanyRepository
@@ -12,14 +12,14 @@ class CompanyService:
     def get_company_by_admin_id(db: Session, admin_id: int):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
-            raise HTTPException(status_code=404, detail="Company not found for this admin")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found for this admin")
         return company
 
     @staticmethod
     def create_company(db: Session, company_data: CompanyCreate):
         existing_user = UserRepository.get_by_email(db, company_data.email)
         if existing_user:
-            raise HTTPException(status_code=400, detail="Company already registered")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Company already registered")
 
         hashed_pw = hash_password(company_data.password)
         user = UserRepository.create(db, email=company_data.email, password=hashed_pw)
@@ -40,11 +40,11 @@ class CompanyService:
     def assign_admin_to_company(db: Session, current_user_id: int, user_id: int):
         current_admin = db.query(CompanyAdminModel).filter(CompanyAdminModel.user_id == current_user_id).first()
         if not current_admin or not current_admin.is_primary_admin:
-            raise HTTPException(status_code=403, detail="Only primary admin can assign new admins")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only primary admin can assign new admins")
 
         user = UserRepository.get_by_id(db, user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         existing_admin = db.query(CompanyAdminModel).filter(
             CompanyAdminModel.user_id == user_id,
@@ -52,7 +52,7 @@ class CompanyService:
         ).first()
 
         if existing_admin:
-            raise HTTPException(status_code=400, detail="User is already an admin of this company")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is already an admin of this company")
 
         new_admin = CompanyRepository.create_company_admin(
             db,
@@ -71,7 +71,7 @@ class CompanyService:
     def list_admins(db: Session, current_user_id: int):
         current_admin = db.query(CompanyAdminModel).filter(CompanyAdminModel.user_id == current_user_id).first()
         if not current_admin:
-            raise HTTPException(status_code=403, detail="Not an admin")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not an admin")
 
         admins = db.query(CompanyAdminModel).filter(
             CompanyAdminModel.company_id == current_admin.company_id
@@ -82,14 +82,14 @@ class CompanyService:
     def update_company_by_admin(db: Session, admin_id: int, data: CompanyUpdate):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
-            raise HTTPException(status_code=404, detail="Company not found for this admin")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found for this admin")
         return CompanyRepository.update_company(db, company, data)
 
     @staticmethod
     def delete_company_by_admin(db: Session, admin_id: int):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
-            raise HTTPException(status_code=404, detail="Company not found for this admin")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found for this admin")
         CompanyRepository.delete_company(db, company)
         user = UserRepository.get_by_id(db, admin_id)
         UserRepository.delete(db, user)
