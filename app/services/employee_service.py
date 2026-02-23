@@ -1,3 +1,5 @@
+import os
+import uuid
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.repositories.employee_repository import EmployeeRepository
@@ -7,8 +9,46 @@ from app.models.employee_model import EmployeeModel
 from app.schemas.employee_schema import EmployeeCreate, EmployeeUpdate
 from app.core.security import hash_password
 
+UPLOAD_DIR = "uploads/profile_images"
+
 
 class EmployeeService:
+
+
+    @staticmethod
+    def _check_employee_permissions(db: Session, current_user_id: int, employee: EmployeeModel):
+        if employee.user_id == current_user_id:
+            return
+
+        company = CompanyRepository.get_by_admin_id(db, current_user_id)
+        if company and company.id == employee.company_id:
+            return
+
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    @staticmethod
+    def _save_image(file):
+        if file.content_type not in ["image/jpeg", "image/png"]:
+            raise HTTPException(status_code=400, detail="Only JPG and PNG allowed")
+
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+        extension = file.filename.split(".")[-1]
+        filename = f"{uuid.uuid4()}.{extension}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+
+        with open(filepath, "wb") as buffer:
+            buffer.write(file.file.read())
+
+        return f"{UPLOAD_DIR}/{filename}"
+
+    @staticmethod
+    def _delete_image(image_url):
+        if image_url:
+            path = image_url.lstrip("/")
+            if os.path.exists(path):
+                os.remove(path)
+
 
     @staticmethod
     def create_employee(db: Session, admin_id: int, data: EmployeeCreate):
@@ -55,44 +95,45 @@ class EmployeeService:
 
 
     @staticmethod
-    def get_employee_by_id(
-        db: Session,
-        current_user_id: int,
-        employee_id: int
-    ):
+    async def change_profile_image(db: Session, current_user_id: int, employee_id: int, file):
+        employee = EmployeeRepository.get_by_id(db, employee_id)
+        if not employee:
+            raise HTTPException(status_code=404, detail="Employee not found")
+
+        EmployeeService._check_employee_permissions(db, current_user_id, employee)
+
+        EmployeeService._delete_image(employee.profile_image_url)
+
+        image_url = EmployeeService._save_image(file)
+        employee.profile_image_url = image_url
+
+        db.commit()
+        db.refresh(employee)
+
+        return employee
+
+    @staticmethod
+    def get_employee_by_id(db: Session, current_user_id: int, employee_id: int):
         employee = EmployeeRepository.get_by_id(db, employee_id)
 
         if not employee:
             raise HTTPException(status_code=404, detail="Employee not found")
 
-        if employee.user_id == current_user_id:
-            return employee
+        EmployeeService._check_employee_permissions(db, current_user_id, employee)
 
-        company = CompanyRepository.get_by_admin_id(db, current_user_id)
-        if company and company.id == employee.company_id:
-            return employee
-
-        raise HTTPException(status_code=403, detail="Not authorized")
-
+        return employee
 
     @staticmethod
     def get_current_employee(db: Session, user_id: int):
         employee = EmployeeRepository.get_by_user_id(db, user_id)
 
         if not employee:
-            raise HTTPException(
-                status_code=404,
-                detail="Employee not found"
-            )
+            raise HTTPException(status_code=404, detail="Employee not found")
 
         return employee
 
-
     @staticmethod
-    def get_company_employees(
-        db: Session,
-        admin_id: int
-    ):
+    def get_company_employees(db: Session, admin_id: int):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
             raise HTTPException(status_code=403, detail="Not authorized")
@@ -101,42 +142,28 @@ class EmployeeService:
 
 
     @staticmethod
-    def update_employee(
-        db: Session,
-        current_user_id: int,
-        employee_id: int,
-        data: EmployeeUpdate
-    ):
+    def update_employee(db: Session, current_user_id: int, employee_id: int, data: EmployeeUpdate):
         employee = EmployeeRepository.get_by_id(db, employee_id)
         if not employee:
             raise HTTPException(status_code=404, detail="Employee not found")
 
-        if employee.user_id != current_user_id:
-            company = CompanyRepository.get_by_admin_id(db, current_user_id)
-            if not company or company.id != employee.company_id:
-                raise HTTPException(status_code=403, detail="Not authorized")
+        EmployeeService._check_employee_permissions(db, current_user_id, employee)
 
         updates = data.model_dump(exclude_unset=True)
-
         return EmployeeRepository.update(db, employee, updates)
 
-
     @staticmethod
-    def delete_employee(
-        db: Session,
-        admin_id: int,
-        employee_id: int
-    ):
+    def delete_employee(db: Session, admin_id: int, employee_id: int):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
             raise HTTPException(status_code=403, detail="Not authorized")
 
         employee = EmployeeRepository.get_by_id(db, employee_id)
-
         if not employee or employee.company_id != company.id:
             raise HTTPException(status_code=404, detail="Employee not found")
 
-        # eliminar también su usuario
+        EmployeeService._delete_image(employee.profile_image_url)
+
         user = UserRepository.get_by_id(db, employee.user_id)
 
         EmployeeRepository.delete(db, employee)

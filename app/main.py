@@ -1,16 +1,22 @@
 # Main
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.db.base import Base
 from app.db.session import engine
-from app.controllers import auth_controller, test, user_controller, company_controller, weekly_burnout_form_controller, employee_controller
-from app.models.employee_model import EmployeeModel
+from app.controllers import (
+    auth_controller,
+    test,
+    user_controller,
+    company_controller,
+    weekly_burnout_form_controller,
+    employee_controller
+)
 
-# Configurar logger de Uvicorn
 logger = logging.getLogger("uvicorn")
 
-# Api configuration
 app = FastAPI(
     title="InnerWork API",
     version="1.0.0",
@@ -29,6 +35,12 @@ app.add_middleware(
 
 # Create database tables if they don't exist 
 Base.metadata.create_all(bind=engine)
+
+# Create uploads directory if it doesn't exist
+os.makedirs("uploads/profile_images", exist_ok=True)
+
+# Static files
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Include routers
 app.include_router(test.router)
