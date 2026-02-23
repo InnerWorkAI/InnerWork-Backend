@@ -5,6 +5,7 @@ uvicorn[standard]
 # Database
 sqlalchemy
 psycopg2-binary
+databases
 
 # Validation / Settings
 pydantic
@@ -16,9 +17,18 @@ python-jose[cryptography]
 passlib[bcrypt]
 bcrypt
 python-multipart
+python-magic 
 
 # Cache
 redis
+aioredis
 
 # Environment variables
 python-dotenv
+
+# Email
+fastapi-mail[aiofiles]  # para enviar emails async
+
+# Utilities
+python-multipart
+python-magic  # opcional, para validar tipos de archivos

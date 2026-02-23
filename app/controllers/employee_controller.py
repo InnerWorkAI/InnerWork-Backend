@@ -14,17 +14,16 @@ router = APIRouter(
 
 
 @router.post("/", response_model=EmployeeResponse)
-def create_employee(
+async def create_employee(
     employee_data: EmployeeCreate,
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user)
 ):
-    return EmployeeService.create_employee(
+    return await EmployeeService.create_employee(
         db,
         current_user.id,
         employee_data
     )
-
 
 @router.post("/{employee_id}/profile-image", response_model=EmployeeResponse)
 async def change_profile_image(

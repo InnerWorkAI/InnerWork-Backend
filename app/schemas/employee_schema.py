@@ -15,7 +15,6 @@ from app.enums.gender import GenderEnum
 class EmployeeCreate(BaseModel):
     # login
     email: EmailStr
-    password: str
 
     # personales
     first_name: str

@@ -6,16 +6,15 @@ from app.models.user_model import UserModel
 class UserRepository:
 
     @staticmethod
-    def create(db: Session, email: str, password: str):
+    def create(db: Session, email: str, password: str, is_active: bool = False):
         user = UserModel(
             email=email,
             password=password,
+            is_active=is_active
         )
-
         db.add(user)
         db.commit()
         db.refresh(user)
-
         return user
 
     @staticmethod
