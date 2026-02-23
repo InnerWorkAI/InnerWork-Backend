@@ -22,7 +22,7 @@ class CompanyService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Company already registered")
 
         hashed_pw = hash_password(company_data.password)
-        user = UserRepository.create(db, email=company_data.email, password=hashed_pw)
+        user = UserRepository.create(db, email=company_data.email, password=hashed_pw, is_active=True)
 
         company = CompanyRepository.create_company(db, name=company_data.name, address=company_data.address)
 

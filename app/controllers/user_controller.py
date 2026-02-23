@@ -2,7 +2,7 @@ from app.core.security import get_current_user
 from app.models.user_model import UserModel
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.schemas.user_schema import UserCreate, UserResponse, UserUpdatePassword
+from app.schemas.user_schema import UserCreate, UserResetPassword, UserResponse, UserRequestPasswordReset
 from app.services.user_service import UserService
 from app.db.session import get_db
 from typing import List
@@ -29,16 +29,26 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return UserService.create_user(db, user)
 
-@router.put("/me/password", response_model=UserResponse)
-def update_my_password(
-    password_data: UserUpdatePassword,
+@router.post("/request-password-reset")
+async def request_password_reset(
+    data: UserRequestPasswordReset,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
 ):
-    return UserService.update_password(
+    return await UserService.request_password_reset(
         db,
-        current_user,
-        password_data.new_password
+        data.email
+    )
+
+
+@router.post("/reset-password")
+def reset_password(
+    data: UserResetPassword,
+    db: Session = Depends(get_db),
+):
+    return UserService.reset_password_with_token(
+        db,
+        data.token,
+        data.new_password
     )
 
 @router.delete("/")

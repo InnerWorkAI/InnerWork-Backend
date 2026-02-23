@@ -1,5 +1,6 @@
 import os
 import uuid
+from app.services.email_service import send_reset_email
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.repositories.employee_repository import EmployeeRepository
@@ -7,7 +8,7 @@ from app.repositories.company_repository import CompanyRepository
 from app.repositories.user_repository import UserRepository
 from app.models.employee_model import EmployeeModel
 from app.schemas.employee_schema import EmployeeCreate, EmployeeUpdate
-from app.core.security import hash_password
+from app.core.security import create_reset_token, generate_temporary_password, hash_password
 
 UPLOAD_DIR = "uploads/profile_images"
 
@@ -51,7 +52,7 @@ class EmployeeService:
 
 
     @staticmethod
-    def create_employee(db: Session, admin_id: int, data: EmployeeCreate):
+    async def create_employee(db: Session, admin_id: int, data: EmployeeCreate):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
@@ -60,10 +61,13 @@ class EmployeeService:
         if existing_user:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
+        temp_password = generate_temporary_password()
+
         user = UserRepository.create(
             db,
             email=data.email,
-            password=hash_password(data.password)
+            password=hash_password(temp_password),
+            is_active=False
         )
 
         employee = EmployeeModel(
@@ -91,7 +95,13 @@ class EmployeeService:
             percent_salary_hike=data.percent_salary_hike
         )
 
-        return EmployeeRepository.create(db, employee)
+        employee = EmployeeRepository.create(db, employee)
+
+        token = create_reset_token(user.id)
+
+        await send_reset_email(user.email, token)
+
+        return employee
 
 
     @staticmethod
