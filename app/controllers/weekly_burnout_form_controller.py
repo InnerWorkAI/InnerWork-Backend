@@ -6,6 +6,7 @@ from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreate, Week
 from app.services.weekly_burnout_form_service import WeeklyBurnoutFormService
 from app.models.user_model import UserModel
 from app.core.security import get_current_user
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/burnout-forms",
@@ -43,11 +44,12 @@ def delete_burnout_form(
 ):
     return WeeklyBurnoutFormService.delete_form(db, form_id, current_user)
 
-@router.post("/{form_id}/image", response_model=WeeklyBurnoutFormResponse)
-def upload_burnout_form_image(
+@router.post("/{form_id}/media", response_model=WeeklyBurnoutFormResponse)
+def upload_burnout_form_media(
     form_id: int,
-    file: UploadFile = File(...),
+    images: List[UploadFile] = File(default=[]), 
+    audio: Optional[UploadFile] = File(None),    
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user)
 ):
-    return WeeklyBurnoutFormService.upload_image(db, form_id, current_user, file)
+    return WeeklyBurnoutFormService.upload_media(db, form_id, current_user, images, audio)

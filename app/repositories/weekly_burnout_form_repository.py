@@ -26,8 +26,11 @@ class WeeklyBurnoutFormRepository:
         db.commit()
 
     @staticmethod
-    def update_image(db: Session, form_db: WeeklyBurnoutFormModel, image_url: str):
-        form_db.image_url = image_url
+    def update_media(db: Session, form_db: WeeklyBurnoutFormModel, image_urls: str, audio_url: str):
+        if image_urls:
+            form_db.image_urls = image_urls
+        if audio_url:
+            form_db.audio_url = audio_url
         db.commit()
         db.refresh(form_db)
         return form_db
