@@ -15,9 +15,9 @@ UPLOAD_DIR = "uploads/profile_images"
 
 class EmployeeService:
 
-
     @staticmethod
-    def _check_employee_permissions(db: Session, current_user_id: int, employee: EmployeeModel):
+    def _check_employee_permissions(db: Session, current_user_id: int, employee_id: int):
+        employee = EmployeeRepository.get_by_id(db, employee_id)
         if employee.user_id == current_user_id:
             return
 
@@ -110,7 +110,7 @@ class EmployeeService:
         if not employee:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        EmployeeService._check_employee_permissions(db, current_user_id, employee)
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
 
         EmployeeService._delete_image(employee.profile_image_url)
 
@@ -129,7 +129,7 @@ class EmployeeService:
         if not employee:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        EmployeeService._check_employee_permissions(db, current_user_id, employee)
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
 
         return employee
 
@@ -157,7 +157,7 @@ class EmployeeService:
         if not employee:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        EmployeeService._check_employee_permissions(db, current_user_id, employee)
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
 
         updates = data.model_dump(exclude_unset=True)
         return EmployeeRepository.update(db, employee, updates)
