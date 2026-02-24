@@ -1,3 +1,4 @@
+from app.services.employee_service import EmployeeService
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
@@ -25,6 +26,13 @@ class WeeklyBurnoutFormService:
                 detail="Formulario no encontrado"
             )
         return form
+    
+    @staticmethod
+    def get_forms_by_employee(db: Session, current_user_id: int, employee_id: int):
+        
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
+
+        return WeeklyBurnoutFormRepository.get_by_employee_id(db, employee_id)
 
     @staticmethod
     def delete_form(db: Session, form_id: int):

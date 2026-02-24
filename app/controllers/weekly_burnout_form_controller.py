@@ -1,3 +1,5 @@
+from app.core.security import get_current_user
+from app.models.user_model import UserModel
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
@@ -20,6 +22,10 @@ def create_burnout_form(
 @router.get("/", response_model=List[WeeklyBurnoutFormResponse])
 def get_burnout_forms(db: Session = Depends(get_db)):
     return WeeklyBurnoutFormService.get_all_forms(db)
+
+@router.get("/{employee_id}", response_model=List[WeeklyBurnoutFormResponse])
+def get_burnout_forms_by_employee(employee_id: int, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+    return WeeklyBurnoutFormService.get_forms_by_employee(db, current_user.id, employee_id)
 
 @router.get("/{form_id}", response_model=WeeklyBurnoutFormResponse)
 def get_burnout_form(form_id: int, db: Session = Depends(get_db)):
