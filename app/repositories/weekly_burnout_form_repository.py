@@ -26,6 +26,10 @@ class WeeklyBurnoutFormRepository:
     @staticmethod
     def get_by_employee_id(db: Session, employee_id: int):
         return db.query(WeeklyBurnoutFormModel).filter(WeeklyBurnoutFormModel.employee_id == employee_id).all()
+    
+    @staticmethod
+    def get_last_by_employee_id(db: Session, employee_id: int):
+        return db.query(WeeklyBurnoutFormModel).filter(WeeklyBurnoutFormModel.employee_id == employee_id).order_by(WeeklyBurnoutFormModel.created_at.desc()).first()
 
     @staticmethod
     def delete(db: Session, form_db: WeeklyBurnoutFormModel):
