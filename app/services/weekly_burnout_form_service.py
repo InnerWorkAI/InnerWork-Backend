@@ -1,14 +1,15 @@
 import os
 import shutil
-import uuid # Para generar nombres únicos aleatorios
-from typing import List, Optional # ¡Importante añadir esto arriba!
+import uuid 
+from typing import List, Optional 
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status, UploadFile
+from fastapi import HTTPException, status, UploadFile, BackgroundTasks # ¡Añadido BackgroundTasks!
 from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreate
 from app.models.user_model import UserModel
 from app.models.employee_model import EmployeeModel
 from app.models.company_admin_model import CompanyAdminModel
+from app.services.audio_service import AudioTranscriptionService # ¡Añadido el nuevo servicio!
 
 # Creamos las carpetas seguras
 UPLOAD_DIR_IMAGES = "uploads/burnout_images"
@@ -78,7 +79,7 @@ class WeeklyBurnoutFormService:
         return {"message": "Formulario eliminado correctamente"}
 
     @staticmethod
-    def upload_media(db: Session, form_id: int, current_user: UserModel, images: List[UploadFile], audio: Optional[UploadFile] = None):
+    def upload_media(db: Session, form_id: int, current_user: UserModel, images: List[UploadFile], background_tasks: BackgroundTasks, audio: Optional[UploadFile] = None):
         form = WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
 
         saved_image_paths = []
@@ -111,5 +112,12 @@ class WeeklyBurnoutFormService:
                 shutil.copyfileobj(audio.file, buffer)
 
         image_urls_str = ",".join(saved_image_paths) if saved_image_paths else None
+
+        if audio_path:
+            background_tasks.add_task(
+                AudioTranscriptionService.process_audio_to_text,
+                form_id, 
+                audio_path
+            )
 
         return WeeklyBurnoutFormRepository.update_media(db, form, image_urls_str, audio_path)
