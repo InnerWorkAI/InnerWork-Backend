@@ -1,3 +1,4 @@
+from app.services.employee_service import EmployeeService
 import os
 import shutil
 import uuid 
@@ -5,6 +6,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, UploadFile, BackgroundTasks # ¡Añadido BackgroundTasks!
 from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
+from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateRequest, WeeklyBurnoutFormCreate
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreate
 from app.models.user_model import UserModel
 from app.models.employee_model import EmployeeModel
@@ -41,20 +43,24 @@ class WeeklyBurnoutFormService:
         )
 
     @staticmethod
-    def create_form(db: Session, form_data: WeeklyBurnoutFormCreate, current_user: UserModel):
-        employee = db.query(EmployeeModel).filter(EmployeeModel.id == form_data.employee_id).first()
-        if not employee:
-            raise HTTPException(status_code=404, detail="El empleado no existe")
-            
-        if employee.user_id != current_user.id:
-            is_admin = db.query(CompanyAdminModel).filter(
-                CompanyAdminModel.user_id == current_user.id,
-                CompanyAdminModel.company_id == employee.company_id
-            ).first()
-            if not is_admin:
-                raise HTTPException(status_code=403, detail="No puedes crear un formulario para otro empleado")
 
-        return WeeklyBurnoutFormRepository.create(db, form_data)
+    def create_form(db: Session, current_user_id: int, form_data: WeeklyBurnoutFormCreateRequest):
+        
+        employee = EmployeeService.get_current_employee(db, current_user_id)
+
+        if not employee:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Empleado no encontrado"
+            )
+        
+        form_data_with_employee_id = WeeklyBurnoutFormCreate(
+            **form_data.model_dump(),
+            employee_id=employee.id
+        )
+
+        return WeeklyBurnoutFormRepository.create(db, form_data_with_employee_id)
+
 
     @staticmethod
     def get_all_forms(db: Session, current_user: UserModel):
@@ -71,6 +77,21 @@ class WeeklyBurnoutFormService:
         
         WeeklyBurnoutFormService._check_permissions(db, form, current_user)
         return form
+    
+    @staticmethod
+    def get_forms_by_employee(db: Session, current_user_id: int, employee_id: int):
+        
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
+
+        return WeeklyBurnoutFormRepository.get_by_employee_id(db, employee_id)
+    
+
+    @staticmethod
+    def get_last_form_by_employee(db: Session, current_user_id: int, employee_id: int):
+        
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
+
+        return WeeklyBurnoutFormRepository.get_last_by_employee_id(db, employee_id)
 
     @staticmethod
     def delete_form(db: Session, form_id: int, current_user: UserModel):

@@ -5,6 +5,7 @@ uvicorn[standard]
 # Database
 sqlalchemy
 psycopg2-binary
+databases
 
 # Validation / Settings
 pydantic
@@ -16,14 +17,26 @@ python-jose[cryptography]
 passlib[bcrypt]
 bcrypt
 python-multipart
+python-magic 
 
 # Cache
 redis
+aioredis
 
 # Environment variables
 python-dotenv
 
+# Email
+fastapi-mail[aiofiles]
+
+# Utilities
+python-multipart
+python-magic
+
 # Machine Learning
+tensorflow==2.20.0
+pillow
+numpy
 scikit-learn==1.6.1
 joblib
 openai-whisper

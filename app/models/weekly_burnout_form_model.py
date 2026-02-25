@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Date
+# app/models/weekly_burnout_form_model.py
+from sqlalchemy import DateTime
+from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey
 from datetime import datetime
 from app.db.base import Base
 
@@ -19,8 +22,4 @@ class WeeklyBurnoutFormModel(Base):
     business_travel = Column(String(50))
 
     burnout_score = Column(Float)
-    
-    image_urls = Column(Text, nullable=True)
-    audio_url = Column(String(255), nullable=True)
-    
-    created_at = Column(Date, default=datetime.now, nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
