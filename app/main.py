@@ -1,6 +1,7 @@
 # Main
 import logging
 import os
+from app.tasks.reminder_tasks import start_scheduler
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.db.base import Base
@@ -23,7 +24,6 @@ logger = logging.getLogger("uvicorn")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     # Create database tables
     Base.metadata.create_all(bind=engine)
 
@@ -31,6 +31,8 @@ async def lifespan(app: FastAPI):
     if settings.ENV == "development":
         run_development_seed()
 
+    start_scheduler()
+    
     yield
 
 
