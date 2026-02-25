@@ -1,11 +1,15 @@
 from pydantic import BaseModel, Field
+from fastapi import UploadFile, File
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
+
 
 class WeeklyBurnoutFormCreateRequest(BaseModel):
 
     # Lista de imágenes y audio
-    
+    images: Optional[List[UploadFile]] = File(None),
+    audio: Optional[UploadFile] = File(None),
+
     environment_satisfaction: Optional[str] = None
     overtime: Optional[str] = None
     job_involvement: Optional[str] = None
