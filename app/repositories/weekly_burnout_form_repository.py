@@ -6,10 +6,7 @@ class WeeklyBurnoutFormRepository:
 
     @staticmethod
     def create(db: Session, form_data: WeeklyBurnoutFormCreate):
-        # Convertimos el esquema de Pydantic al modelo de SQLAlchemy
-        # form_data.model_dump() convierte los datos a un diccionario
         db_form = WeeklyBurnoutFormModel(**form_data.model_dump())
-        
         db.add(db_form)
         db.commit()
         db.refresh(db_form)
@@ -35,3 +32,13 @@ class WeeklyBurnoutFormRepository:
     def delete(db: Session, form_db: WeeklyBurnoutFormModel):
         db.delete(form_db)
         db.commit()
+
+    @staticmethod
+    def update_media(db: Session, form_db: WeeklyBurnoutFormModel, image_urls: str, audio_url: str):
+        if image_urls:
+            form_db.image_urls = image_urls
+        if audio_url:
+            form_db.audio_url = audio_url
+        db.commit()
+        db.refresh(form_db)
+        return form_db
