@@ -13,7 +13,8 @@ class WeeklyBurnoutFormRepository:
         return db_form
 
     @staticmethod
-    def get_all(db: Session):
+    def get_all(db: Session, current_user_id: int):
+        # 
         return db.query(WeeklyBurnoutFormModel).all()
 
     @staticmethod

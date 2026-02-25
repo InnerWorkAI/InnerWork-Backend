@@ -4,7 +4,7 @@ from typing import Optional
 
 class WeeklyBurnoutFormCreateRequest(BaseModel):
 
-    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
+    # Lista de imágenes y audio
     
     environment_satisfaction: Optional[str] = None
     overtime: Optional[str] = None
@@ -18,6 +18,8 @@ class WeeklyBurnoutFormCreateRequest(BaseModel):
 class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateRequest):
     employee_id: int = Field(..., description="ID del empleado al que pertenece el formulario") 
     burnout_score: Optional[float] = Field(0, description="Puntaje calculado o ingresado") 
+    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
+
 
 class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
     id: int
