@@ -1,29 +1,20 @@
 from pydantic import BaseModel, Field
-from fastapi import UploadFile, File
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
+class WeeklyBurnoutFormCreateBase(BaseModel):
+    environment_satisfaction: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
+    overtime: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
+    job_involvement: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
+    performance_rating: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
+    job_satisfaction: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
+    work_life_balance: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
+    business_travel: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
 
-class WeeklyBurnoutFormCreateRequest(BaseModel):
-
-    # Lista de imágenes y audio
-    images: Optional[List[UploadFile]] = File(None),
-    audio: Optional[UploadFile] = File(None),
-
-    environment_satisfaction: Optional[str] = None
-    overtime: Optional[str] = None
-    job_involvement: Optional[str] = None
-    performance_rating: Optional[str] = None
-    job_satisfaction: Optional[str] = None
-    work_life_balance: Optional[str] = None
-    business_travel: Optional[str] = None
-    
-
-class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateRequest):
-    employee_id: int = Field(..., description="ID del empleado al que pertenece el formulario") 
-    burnout_score: Optional[float] = Field(0, description="Puntaje calculado o ingresado") 
-    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
-
+class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateBase):
+    employee_id: int = Field(..., description="ID of the employee to whom the form belongs") 
+    burnout_score: Optional[float] = Field(0.0, description="Calculated or manually entered burnout score") 
+    written_feedback: Optional[str] = Field(None, description="Optional written feedback or audio transcription")
 
 class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
     id: int

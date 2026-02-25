@@ -2,7 +2,7 @@ import os
 import joblib
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_DIR = os.path.join(BASE_DIR, "..", "ml_models")
+MODEL_DIR = os.path.join(BASE_DIR, "ml_models")
 
 VECTORIZER_PATH = os.path.join(MODEL_DIR, "tfidf_vectorizer.joblib")
 MODEL_PATH = os.path.join(MODEL_DIR, "svm_calibrated_model.joblib")
@@ -30,9 +30,8 @@ class TextAnalysisService:
 
         probabilities = cls._model.predict_proba(text_features)
         
-        burnout_probability = probabilities[0][1] 
-        burnout_score_out_of_5 = float(burnout_probability * 5)
+        burnout_probability = float(probabilities[0][1])
 
-        print(f"[INFO] Text analyzed. Probability: {burnout_probability:.2f} | Calculated score: {burnout_score_out_of_5:.2f}/5")
+        print(f"[INFO] Text analyzed. Probability (0-1): {burnout_probability:.4f}")
         
-        return burnout_score_out_of_5
+        return burnout_probability

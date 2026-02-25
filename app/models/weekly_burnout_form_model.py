@@ -1,7 +1,6 @@
-# app/models/weekly_burnout_form_model.py
 from sqlalchemy import DateTime
 from sqlalchemy.sql import func
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey
+from sqlalchemy import Column, Integer, Float, Text, ForeignKey
 from datetime import datetime
 from app.db.base import Base
 
@@ -13,13 +12,13 @@ class WeeklyBurnoutFormModel(Base):
 
     written_feedback = Column(Text)
 
-    environment_satisfaction = Column(String(50))
-    overtime = Column(String(10))
-    job_involvement = Column(String(50))
-    performance_rating = Column(String(50))
-    job_satisfaction = Column(String(50))
-    work_life_balance = Column(String(50))
-    business_travel = Column(String(50))
+    environment_satisfaction = Column(Integer)
+    overtime = Column(Integer)
+    job_involvement = Column(Integer)
+    performance_rating = Column(Integer)
+    job_satisfaction = Column(Integer)
+    work_life_balance = Column(Integer)
+    business_travel = Column(Integer)
 
     burnout_score = Column(Float)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
