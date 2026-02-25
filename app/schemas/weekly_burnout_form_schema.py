@@ -1,11 +1,15 @@
 from pydantic import BaseModel, Field
+from fastapi import UploadFile, File
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
+
 
 class WeeklyBurnoutFormCreateRequest(BaseModel):
 
-    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
-    
+    # Lista de imágenes y audio
+    images: Optional[List[UploadFile]] = File(None),
+    audio: Optional[UploadFile] = File(None),
+
     environment_satisfaction: Optional[str] = None
     overtime: Optional[str] = None
     job_involvement: Optional[str] = None
@@ -18,6 +22,8 @@ class WeeklyBurnoutFormCreateRequest(BaseModel):
 class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateRequest):
     employee_id: int = Field(..., description="ID del empleado al que pertenece el formulario") 
     burnout_score: Optional[float] = Field(0, description="Puntaje calculado o ingresado") 
+    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
+
 
 class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
     id: int

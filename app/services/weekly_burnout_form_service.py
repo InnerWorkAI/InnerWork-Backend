@@ -43,7 +43,6 @@ class WeeklyBurnoutFormService:
         )
 
     @staticmethod
-
     def create_form(db: Session, current_user_id: int, form_data: WeeklyBurnoutFormCreateRequest):
         
         employee = EmployeeService.get_current_employee(db, current_user_id)
@@ -54,9 +53,16 @@ class WeeklyBurnoutFormService:
                 detail="Empleado no encontrado"
             )
         
+
+        # Predicciones
+
+        
+
         form_data_with_employee_id = WeeklyBurnoutFormCreate(
             **form_data.model_dump(),
-            employee_id=employee.id
+            employee_id=employee.id,
+            written_feedback=None, # Transcripción de audio o feedback escrito
+            burnout_score=0 # Aquí podrías calcular el puntaje de burnout basado en las respuestas o dejarlo para que el administrador lo ingrese después
         )
 
         return WeeklyBurnoutFormRepository.create(db, form_data_with_employee_id)
@@ -64,7 +70,7 @@ class WeeklyBurnoutFormService:
 
     @staticmethod
     def get_all_forms(db: Session, current_user: UserModel):
-        return WeeklyBurnoutFormRepository.get_all(db)
+        return WeeklyBurnoutFormRepository.get_all(db, current_user.id)
 
     @staticmethod
     def get_form_by_id(db: Session, form_id: int, current_user: UserModel):
