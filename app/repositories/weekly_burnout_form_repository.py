@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models.weekly_burnout_form_model import WeeklyBurnoutFormModel
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreate
@@ -6,8 +7,6 @@ class WeeklyBurnoutFormRepository:
 
     @staticmethod
     def create(db: Session, form_data: WeeklyBurnoutFormCreate):
-        # Convertimos el esquema de Pydantic al modelo de SQLAlchemy
-        # form_data.model_dump() convierte los datos a un diccionario
         db_form = WeeklyBurnoutFormModel(**form_data.model_dump())
         
         db.add(db_form)
@@ -35,3 +34,18 @@ class WeeklyBurnoutFormRepository:
     def delete(db: Session, form_db: WeeklyBurnoutFormModel):
         db.delete(form_db)
         db.commit()
+
+    @staticmethod
+    def exists_this_week(db: Session, employee_id: int) -> bool:
+        today = datetime.now()
+
+        start_of_week = today - timedelta(days=today.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        end_of_week = start_of_week + timedelta(days=7)
+
+        return db.query(WeeklyBurnoutFormModel).filter(
+            WeeklyBurnoutFormModel.employee_id == employee_id,
+            WeeklyBurnoutFormModel.created_at >= start_of_week,
+            WeeklyBurnoutFormModel.created_at < end_of_week
+        ).first() is not None

@@ -55,7 +55,13 @@ class WeeklyBurnoutFormService:
 
     @staticmethod
     def delete_form(db: Session, form_id: int):
-        # Primero buscamos si existe usando nuestro propio método que ya lanza error 404
         form = WeeklyBurnoutFormService.get_form_by_id(db, form_id)
         WeeklyBurnoutFormRepository.delete(db, form)
         return {"message": "Formulario eliminado correctamente"}
+    
+    @staticmethod
+    def has_form_this_week(db: Session, current_user_id: int, employee_id: int):
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
+
+        exists = WeeklyBurnoutFormRepository.exists_this_week(db, employee_id)
+        return {"has_form_this_week": exists}

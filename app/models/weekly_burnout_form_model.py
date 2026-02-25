@@ -1,4 +1,3 @@
-# app/models/weekly_burnout_form_model.py
 from sqlalchemy import DateTime
 from sqlalchemy.sql import func
 

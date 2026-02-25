@@ -16,7 +16,6 @@ class WeeklyBurnoutFormCreateRequest(BaseModel):
     business_travel: Optional[str] = None
     
 
-# Esto valida los datos que nos envían para CREAR un formulario
 class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateRequest):
     employee_id: int = Field(..., description="ID del empleado al que pertenece el formulario") 
     burnout_score: Optional[float] = Field(0, description="Puntaje calculado o ingresado") 
