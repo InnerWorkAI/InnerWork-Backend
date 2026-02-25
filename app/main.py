@@ -12,7 +12,8 @@ from app.controllers import (
     user_controller,
     company_controller,
     weekly_burnout_form_controller,
-    employee_controller
+    employee_controller,
+    image_predictor_controller
 )
 
 logger = logging.getLogger("uvicorn")
@@ -49,3 +50,4 @@ app.include_router(user_controller.router)
 app.include_router(company_controller.router)
 app.include_router(employee_controller.router)
 app.include_router(weekly_burnout_form_controller.router)
+app.include_router(image_predictor_controller.router)

@@ -27,8 +27,16 @@ aioredis
 python-dotenv
 
 # Email
-fastapi-mail[aiofiles]  # para enviar emails async
+fastapi-mail[aiofiles]
 
 # Utilities
 python-multipart
-python-magic  # opcional, para validar tipos de archivos
+python-magic
+
+# Machine Learning
+tensorflow==2.20.0
+pillow
+numpy
+scikit-learn==1.6.1
+joblib
+openai-whisper

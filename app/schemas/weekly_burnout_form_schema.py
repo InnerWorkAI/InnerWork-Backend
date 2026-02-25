@@ -1,13 +1,15 @@
 from pydantic import BaseModel, Field
-from datetime import date
-from typing import Optional
+from fastapi import UploadFile, File
+from datetime import datetime
+from typing import List, Optional
 
-# Esto valida los datos que nos envían para CREAR un formulario
-class WeeklyBurnoutFormCreate(BaseModel):
-    employee_id: int = Field(..., description="ID del empleado que llena el formulario")
-    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
-    
-    # Campos del formulario (Opcionales porque en el modelo no dicen nullable=False explícitamente)
+
+class WeeklyBurnoutFormCreateRequest(BaseModel):
+
+    # Lista de imágenes y audio
+    images: Optional[List[UploadFile]] = File(None),
+    audio: Optional[UploadFile] = File(None),
+
     environment_satisfaction: Optional[str] = None
     overtime: Optional[str] = None
     job_involvement: Optional[str] = None
@@ -16,12 +18,16 @@ class WeeklyBurnoutFormCreate(BaseModel):
     work_life_balance: Optional[str] = None
     business_travel: Optional[str] = None
     
-    burnout_score: Optional[float] = Field(None, description="Puntaje calculado o ingresado")
 
-# Esto define cómo se ven los datos cuando los devolvemos al usuario
+class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateRequest):
+    employee_id: int = Field(..., description="ID del empleado al que pertenece el formulario") 
+    burnout_score: Optional[float] = Field(0, description="Puntaje calculado o ingresado") 
+    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
+
+
 class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
     id: int
-    created_at: date
+    created_at: datetime
 
     class Config:
         from_attributes = True
