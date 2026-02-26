@@ -8,14 +8,14 @@ class WeeklyBurnoutFormRepository:
     @staticmethod
     def create(db: Session, form_data: WeeklyBurnoutFormCreate):
         db_form = WeeklyBurnoutFormModel(**form_data.model_dump())
-        
         db.add(db_form)
         db.commit()
         db.refresh(db_form)
         return db_form
 
     @staticmethod
-    def get_all(db: Session):
+    def get_all(db: Session, current_user_id: int):
+        # 
         return db.query(WeeklyBurnoutFormModel).all()
 
     @staticmethod
@@ -36,6 +36,15 @@ class WeeklyBurnoutFormRepository:
         db.commit()
 
     @staticmethod
+    def update_media(db: Session, form_db: WeeklyBurnoutFormModel, image_urls: str, audio_url: str):
+        if image_urls:
+            form_db.image_urls = image_urls
+        if audio_url:
+            form_db.audio_url = audio_url
+        db.commit()
+        db.refresh(form_db)
+        return form_db
+      
     def exists_this_week(db: Session, employee_id: int) -> bool:
         today = datetime.now()
 

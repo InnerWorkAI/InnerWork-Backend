@@ -15,8 +15,10 @@ class AuthService:
                 detail="Invalid credentials"
             )
 
+        role = UserRepository.get_user_role(db, user)
+
         access_token = create_access_token(
-            data={"sub": str(user.id)}
+            data={"sub": str(user.id), "role": role}
         )
 
         return {

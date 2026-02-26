@@ -37,3 +37,8 @@ numpy
 
 # Machine Learning
 tensorflow==2.20.0
+pillow
+numpy
+scikit-learn==1.6.1
+joblib
+openai-whisper
