@@ -45,11 +45,15 @@ def get_burnout_form(
 ):
     return WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
 
-@router.delete("/{form_id}")
-def delete_burnout_form(
-    form_id: int, 
-    db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user) 
+@router.get("/employee/{employee_id}/has-this-week")
+def has_burnout_form_this_week(
+    employee_id: int,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    return WeeklyBurnoutFormService.delete_form(db, form_id, current_user)
+    return WeeklyBurnoutFormService.has_form_this_week(db, current_user.id, employee_id)
+
+@router.delete("/{form_id}")
+def delete_burnout_form(form_id: int, db: Session = Depends(get_db)):
+    return WeeklyBurnoutFormService.delete_form(db, form_id)
 

@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, DECIMAL, DateTime
 from datetime import datetime
 from app.db.base import Base
+from sqlalchemy.orm import relationship
+from app.models.user_model import UserModel
 
 
 class EmployeeModel(Base):
@@ -38,3 +40,6 @@ class EmployeeModel(Base):
     percent_salary_hike = Column(DECIMAL(5, 2))
 
     created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+
+    user = relationship("UserModel", backref="employee")

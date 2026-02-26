@@ -100,51 +100,14 @@ class WeeklyBurnoutFormService:
         return WeeklyBurnoutFormRepository.get_last_by_employee_id(db, employee_id)
 
     @staticmethod
-    def delete_form(db: Session, form_id: int, current_user: UserModel):
-        form = WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
+    def delete_form(db: Session, form_id: int):
+        form = WeeklyBurnoutFormService.get_form_by_id(db, form_id)
         WeeklyBurnoutFormRepository.delete(db, form)
         return {"message": "Formulario eliminado correctamente"}
-
+    
     @staticmethod
-    def upload_media(db: Session, form_id: int, current_user: UserModel, images: List[UploadFile], background_tasks: BackgroundTasks, audio: Optional[UploadFile] = None):
-        form = WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
+    def has_form_this_week(db: Session, current_user_id: int, employee_id: int):
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
 
-        saved_image_paths = []
-        audio_path = None
-
-        if images:
-            for image in images:
-                if image.filename: 
-                    if not image.content_type.startswith("image/"):
-                        raise HTTPException(status_code=400, detail=f"El archivo {image.filename} no es una imagen válida")
-                    
-                    file_extension = image.filename.split(".")[-1]
-                    file_name = f"form_{form_id}_{uuid.uuid4().hex[:8]}.{file_extension}"
-                    file_path = os.path.join(UPLOAD_DIR_IMAGES, file_name)
-
-                    with open(file_path, "wb") as buffer:
-                        shutil.copyfileobj(image.file, buffer)
-                    
-                    saved_image_paths.append(file_path)
-
-        if audio and audio.filename:
-            if not audio.content_type.startswith("audio/"):
-                raise HTTPException(status_code=400, detail="El archivo de audio no es válido")
-
-            audio_extension = audio.filename.split(".")[-1]
-            audio_name = f"form_{form_id}_audio.{audio_extension}"
-            audio_path = os.path.join(UPLOAD_DIR_AUDIO, audio_name)
-
-            with open(audio_path, "wb") as buffer:
-                shutil.copyfileobj(audio.file, buffer)
-
-        image_urls_str = ",".join(saved_image_paths) if saved_image_paths else None
-
-        if audio_path:
-            background_tasks.add_task(
-                AudioTranscriptionService.process_audio_to_text,
-                form_id, 
-                audio_path
-            )
-
-        return WeeklyBurnoutFormRepository.update_media(db, form, image_urls_str, audio_path)
+        exists = WeeklyBurnoutFormRepository.exists_this_week(db, employee_id)
+        return {"has_form_this_week": exists}

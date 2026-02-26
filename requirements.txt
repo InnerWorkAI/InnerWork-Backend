@@ -5,7 +5,6 @@ uvicorn[standard]
 # Database
 sqlalchemy
 psycopg2-binary
-databases
 
 # Validation / Settings
 pydantic
@@ -17,7 +16,7 @@ python-jose[cryptography]
 passlib[bcrypt]
 bcrypt
 python-multipart
-python-magic 
+python-magic
 
 # Cache
 redis
@@ -29,9 +28,12 @@ python-dotenv
 # Email
 fastapi-mail[aiofiles]
 
+# Scheduler
+apscheduler
+
 # Utilities
-python-multipart
-python-magic
+pillow
+numpy
 
 # Machine Learning
 tensorflow==2.20.0
