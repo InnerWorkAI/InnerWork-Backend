@@ -1,7 +1,5 @@
-from sqlalchemy import DateTime
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, DateTime
 from sqlalchemy.sql import func
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey
-from datetime import datetime
 from app.db.base import Base
 
 class WeeklyBurnoutFormModel(Base):

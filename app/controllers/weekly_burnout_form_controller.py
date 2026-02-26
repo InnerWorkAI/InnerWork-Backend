@@ -1,6 +1,8 @@
+from app.agents.burnout_agent import BurnoutAgent
 from app.core.security import get_current_user
+from app.models.employee_model import EmployeeModel
 from app.models.user_model import UserModel
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
@@ -9,18 +11,33 @@ from app.services.weekly_burnout_form_service import WeeklyBurnoutFormService
 from app.models.user_model import UserModel
 from app.core.security import get_current_user
 
+
 router = APIRouter(
     prefix="/burnout-forms",
     tags=["Weekly Burnout Forms"]
 )
 
+
 @router.post("/", response_model=WeeklyBurnoutFormResponse, status_code=201)
 def create_burnout_form(
     form_data: WeeklyBurnoutFormCreateRequest, 
+    background_tasks: BackgroundTasks,
     current_user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return WeeklyBurnoutFormService.create_form(db, current_user_id=current_user.id, form_data=form_data)
+    form = WeeklyBurnoutFormService.create_form(
+        db, current_user_id=current_user.id, form_data=form_data
+    )
+
+    company_id = db.query(EmployeeModel.company_id).filter(EmployeeModel.id == form.employee_id).scalar()
+
+    background_tasks.add_task(
+        BurnoutAgent.run,
+        company_id,
+        db
+    )
+
+    return WeeklyBurnoutFormResponse.from_orm(form)
 
 @router.get("/", response_model=List[WeeklyBurnoutFormResponse])
 def get_burnout_forms(

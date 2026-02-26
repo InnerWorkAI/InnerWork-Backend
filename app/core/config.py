@@ -23,4 +23,6 @@ class Settings(BaseSettings):
 
     FRONTEND_URL: str
 
+    GROQ_API_KEY: str
+
 settings = Settings(_env_file=f".env.{os.getenv('ENV', 'development')}")
