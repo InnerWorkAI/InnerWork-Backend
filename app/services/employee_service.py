@@ -1,6 +1,6 @@
 import os
 import uuid
-from app.services.email_service import send_reset_email
+from app.services.user_service import UserService
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.repositories.employee_repository import EmployeeRepository
@@ -8,7 +8,8 @@ from app.repositories.company_repository import CompanyRepository
 from app.repositories.user_repository import UserRepository
 from app.models.employee_model import EmployeeModel
 from app.schemas.employee_schema import EmployeeCreate, EmployeeUpdate
-from app.core.security import create_reset_token, generate_temporary_password, hash_password
+from app.core.security import generate_temporary_password, hash_password
+
 
 UPLOAD_DIR = "uploads/profile_images"
 
@@ -97,9 +98,7 @@ class EmployeeService:
 
         employee = EmployeeRepository.create(db, employee)
 
-        token = create_reset_token(user.id)
-
-        await send_reset_email(user.email, token)
+        await UserService.request_password_reset(db, user.email)
 
         return employee
 

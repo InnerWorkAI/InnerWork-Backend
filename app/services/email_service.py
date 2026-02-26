@@ -12,15 +12,54 @@ conf = ConnectionConfig(
     USE_CREDENTIALS=True
 )
 
-async def send_reset_email(email: str, token: str):
-    reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+
+async def send_email(
+    recipient_email: str,
+    subject: str,
+    title: str,
+    body_text: str,
+    button_text: str = None,
+    button_url: str = None
+):
+    """
+    Send a stylized HTML email with optional button.
+    - recipient_email: The email address of the recipient
+    - subject: The subject of the email
+    - title: The main title/header of the email
+    - body_text: The main content of the email (can include HTML)
+    - button_text: (Optional) The text to display on the button
+    - button_url: (Optional) The URL the button should link to
+    """
+
+    button_html = ""
+    if button_text and button_url:
+        button_html = f"""
+        <table width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center" style="padding:20px 0;">
+                    <a href="{button_url}" target="_blank" 
+                        style="
+                            background-color:#9333ea;
+                            color:#ffffff;
+                            padding:12px 24px;
+                            text-decoration:none;
+                            font-weight:bold;
+                            border-radius:6px;
+                            display:inline-block;
+                        ">
+                        {button_text}
+                    </a>
+                </td>
+            </tr>
+        </table>
+        """
 
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Reset Your Password</title>
+        <title>{title}</title>
     </head>
     <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color:#f4f4f4;">
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -29,37 +68,15 @@ async def send_reset_email(email: str, token: str):
                     <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:10px; padding:30px; margin:50px 0; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
                         <tr>
                             <td align="center" style="padding-bottom:20px;">
-                                <h1 style="color:#9333ea; margin:0;">Reset Your Password</h1>
+                                <h1 style="color:#9333ea; margin:0;">{title}</h1>
                             </td>
                         </tr>
                         <tr>
                             <td>
                                 <p style="color:#333333; font-size:16px; line-height:1.5;">
-                                    Hello,<br><br>
-                                    You requested a password reset for your account. Click the button below to set a new password:
+                                    {body_text}
                                 </p>
-                                <table width="100%" cellspacing="0" cellpadding="0">
-                                    <tr>
-                                        <td align="center" style="padding:20px 0;">
-                                            <!-- BOTÓN REAL -->
-                                            <a href="{reset_url}" target="_blank" 
-                                                style="
-                                                    background-color:#9333ea;
-                                                    color:#ffffff;
-                                                    padding:12px 24px;
-                                                    text-decoration:none;
-                                                    font-weight:bold;
-                                                    border-radius:6px;
-                                                    display:inline-block;
-                                                ">
-                                                Reset Password
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <p style="color:#333333; font-size:14px; line-height:1.4;">
-                                    If you did not request this, please ignore this email. The link will expire in {settings.RESET_TOKEN_EXPIRE_MINUTES} minutes.
-                                </p>
+                                {button_html}
                                 <p style="color:#888888; font-size:12px; text-align:center; margin-top:30px;">
                                     &copy; {settings.FRONTEND_URL.split('//')[-1]} - All rights reserved
                                 </p>
@@ -74,8 +91,8 @@ async def send_reset_email(email: str, token: str):
     """
 
     message = MessageSchema(
-        subject="Reset Your Password",
-        recipients=[email],
+        subject=subject,
+        recipients=[recipient_email],
         body=html_content,
         subtype="html"
     )

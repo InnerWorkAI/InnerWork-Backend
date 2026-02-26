@@ -1,11 +1,10 @@
 from app.core.security import create_reset_token, hash_password, verify_reset_token
-from app.models.user_model import UserModel
-from app.models.company_admin_model import CompanyAdminModel
-from app.services.email_service import send_reset_email
+from app.services.email_service import send_email
 from sqlalchemy.orm import Session
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_schema import UserCreate
 from fastapi import HTTPException, status
+from app.core.config import settings
 
 
 class UserService:
@@ -50,8 +49,16 @@ class UserService:
             return {"detail": "If the email exists, a reset link has been sent."}
 
         token = create_reset_token(user.id)
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
 
-        await send_reset_email(user.email, token)
+        await send_email(
+            recipient_email=user.email,
+            subject="Reset Your Password",
+            title="Reset Your Password",
+            body_text="Hello,<br><br>You requested a password reset for your account. Click the button below to set a new password:",
+            button_text="Reset Password",
+            button_url=reset_url
+        )
 
         return {"detail": "If the email exists, a reset link has been sent."}
 

@@ -148,3 +148,10 @@ class WeeklyBurnoutFormService:
             )
 
         return WeeklyBurnoutFormRepository.update_media(db, form, image_urls_str, audio_path)
+
+    @staticmethod
+    def has_form_this_week(db: Session, current_user_id: int, employee_id: int):
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
+
+        exists = WeeklyBurnoutFormRepository.exists_this_week(db, employee_id)
+        return {"has_form_this_week": exists}
