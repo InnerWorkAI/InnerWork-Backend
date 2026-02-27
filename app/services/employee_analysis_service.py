@@ -7,68 +7,70 @@ from app.models.weekly_burnout_form_model import WeeklyBurnoutFormModel
 
 HIGH_THRESHOLD = 7.0
 
+class EmployeeAnalysisService:
 
-async def analyze_employee(employee_id: int, db: Session):
+    @staticmethod
+    async def analyze_employee(employee_id: int, db: Session):
 
-    four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
+        four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
 
-    forms = (
-        db.query(WeeklyBurnoutFormModel)
-        .filter(WeeklyBurnoutFormModel.employee_id == employee_id)
-        .filter(WeeklyBurnoutFormModel.created_at >= four_weeks_ago)
-        .order_by(WeeklyBurnoutFormModel.created_at.desc())
-        .all()
-    )
+        forms = (
+            db.query(WeeklyBurnoutFormModel)
+            .filter(WeeklyBurnoutFormModel.employee_id == employee_id)
+            .filter(WeeklyBurnoutFormModel.created_at >= four_weeks_ago)
+            .order_by(WeeklyBurnoutFormModel.created_at.desc())
+            .all()
+        )
 
-    if not forms:
+        if not forms:
+            return {
+                "average": 0,
+                "trend": "stable",
+                "is_high_risk": False
+            }
+
+        average = sum(f.burnout_score for f in forms) / len(forms)
+
+        trend = EmployeeAnalysisService.calculate_employee_trend(employee_id, db)
+
         return {
-            "average": 0,
-            "trend": "stable",
-            "is_high_risk": False
+            "average": round(average, 2),
+            "trend": trend,
+            "is_high_risk": average >= HIGH_THRESHOLD
         }
 
-    average = sum(f.burnout_score for f in forms) / len(forms)
+    @staticmethod
+    def calculate_employee_trend(employee_id: int, db: Session):
 
-    trend = calculate_employee_trend(employee_id, db)
+        now = datetime.utcnow()
+        two_weeks_ago = now - timedelta(weeks=2)
+        four_weeks_ago = now - timedelta(weeks=4)
 
-    return {
-        "average": round(average, 2),
-        "trend": trend,
-        "is_high_risk": average >= HIGH_THRESHOLD
-    }
-
-
-def calculate_employee_trend(employee_id: int, db: Session):
-
-    now = datetime.utcnow()
-    two_weeks_ago = now - timedelta(weeks=2)
-    four_weeks_ago = now - timedelta(weeks=4)
-
-    recent_avg = (
-        db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
-        .filter(
-            WeeklyBurnoutFormModel.employee_id == employee_id,
-            WeeklyBurnoutFormModel.created_at >= two_weeks_ago
+        recent_avg = (
+            db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
+            .filter(
+                WeeklyBurnoutFormModel.employee_id == employee_id,
+                WeeklyBurnoutFormModel.created_at >= two_weeks_ago
+            )
+            .scalar()
         )
-        .scalar()
-    )
 
-    older_avg = (
-        db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
-        .filter(
-            WeeklyBurnoutFormModel.employee_id == employee_id,
-            WeeklyBurnoutFormModel.created_at >= four_weeks_ago,
-            WeeklyBurnoutFormModel.created_at < two_weeks_ago
+        older_avg = (
+            db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
+            .filter(
+                WeeklyBurnoutFormModel.employee_id == employee_id,
+                WeeklyBurnoutFormModel.created_at >= four_weeks_ago,
+                WeeklyBurnoutFormModel.created_at < two_weeks_ago
+            )
+            .scalar()
         )
-        .scalar()
-    )
 
-    if not recent_avg or not older_avg:
-        return "stable"
+        if not recent_avg or not older_avg:
+            return "stable"
 
-    if recent_avg > older_avg + 0.5:
-        return "increasing"
-    elif recent_avg < older_avg - 0.5:
-        return "decreasing"
-    else:
-        return "stable"
+        if recent_avg > older_avg + 0.5:
+            return "increasing"
+        elif recent_avg < older_avg - 0.5:
+            return "decreasing"
+        else:
+            return "stable"
