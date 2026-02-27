@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.repositories.employee_repository import EmployeeRepository
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
 from app.models.employee_model import EmployeeModel
 from app.schemas.employee_schema import EmployeeCreate, EmployeeUpdate
 from app.core.security import create_reset_token, generate_temporary_password, hash_password
@@ -173,6 +174,8 @@ class EmployeeService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         EmployeeService._delete_image(employee.profile_image_url)
+
+        WeeklyBurnoutFormRepository.delete_by_employee_id(db, employee.id)
 
         user = UserRepository.get_by_id(db, employee.user_id)
 

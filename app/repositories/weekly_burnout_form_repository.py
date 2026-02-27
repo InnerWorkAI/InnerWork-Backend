@@ -32,3 +32,8 @@ class WeeklyBurnoutFormRepository:
     def delete(db: Session, form_db: WeeklyBurnoutFormModel):
         db.delete(form_db)
         db.commit()
+
+    @staticmethod
+    def delete_by_employee_id(db: Session, employee_id: int):
+        db.query(WeeklyBurnoutFormModel).filter(WeeklyBurnoutFormModel.employee_id == employee_id).delete()
+        db.commit()
