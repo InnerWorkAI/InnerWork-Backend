@@ -101,6 +101,9 @@ class WeeklyBurnoutFormService:
             **form_data.model_dump(),
             employee_id=employee.id,
             written_feedback=transcribed_text,
+            image_score=image_score_int,
+            text_score=text_score_int,
+            form_score=form_score_int,
             burnout_score=final_score_string,
             final_burnout_score=round(final_burnout_score, 2)
         )

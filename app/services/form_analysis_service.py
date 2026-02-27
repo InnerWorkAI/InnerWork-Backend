@@ -94,11 +94,11 @@ class FormAnalysisService:
 
         perf_val = form_data.performance_rating or 3
         ibm_perf = 4 if perf_val >= 4 else 3
-        ibm_overtime = 1 if (form_data.overtime or 0) >= 4 else 0
-        travel_val = form_data.business_travel or 1
+        ibm_overtime = form_data.overtime or 0
+        travel_val = form_data.business_travel or 0
         
-        if travel_val >= 4: ibm_travel = 2
-        elif travel_val >= 2: ibm_travel = 1
+        if travel_val == 2: ibm_travel = 2
+        elif travel_val == 1: ibm_travel = 1
         else: ibm_travel = 0
 
         features = [
@@ -133,8 +133,8 @@ class FormAnalysisService:
         stress_wlb = 5 - (form_data.work_life_balance or 3)
         stress_perf = 5 - (form_data.performance_rating or 3)
         
-        stress_ot = form_data.overtime or 1
-        stress_travel = form_data.business_travel or 1
+        stress_ot = 4 if form_data.overtime == 1 else 1
+        stress_travel = 4 if travel_val == 2 else (2 if travel_val == 1 else 1)
         
         distance_stress = min(4.0, max(0.0, (distance - 10) / 10.0))
         
