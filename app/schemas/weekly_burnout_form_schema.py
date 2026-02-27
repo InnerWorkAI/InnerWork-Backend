@@ -3,13 +3,13 @@ from datetime import datetime
 from typing import Optional
 
 class WeeklyBurnoutFormCreateBase(BaseModel):
-    environment_satisfaction: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
-    overtime: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
-    job_involvement: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
-    performance_rating: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
-    job_satisfaction: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
-    work_life_balance: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
-    business_travel: Optional[int] = Field(None, ge=1, le=5, description="Score from 1 to 5")
+    environment_satisfaction: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    overtime: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    job_involvement: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    performance_rating: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    job_satisfaction: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    work_life_balance: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    business_travel: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
 
 class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateBase):
     employee_id: int = Field(..., description="ID of the employee to whom the form belongs") 

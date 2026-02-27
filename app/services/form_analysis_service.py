@@ -60,24 +60,17 @@ class FormAnalysisService:
         role = cls._get_enum_value(employee.job_role if employee else None, -1)
         marital = cls._get_enum_value(employee.marital_status if employee else None, -1)
 
-        def map_to_ibm_4(val):
-            val = val or 3
-            if val <= 1: return 1
-            if val == 2: return 2
-            if val == 3 or val == 4: return 3
-            return 4 
-
-        env_sat = map_to_ibm_4(form_data.environment_satisfaction)
-        job_sat = map_to_ibm_4(form_data.job_satisfaction)
-        job_inv = map_to_ibm_4(form_data.job_involvement)
-        wl_balance = map_to_ibm_4(form_data.work_life_balance)
+        env_sat = form_data.environment_satisfaction or 3
+        job_sat = form_data.job_satisfaction or 3
+        job_inv = form_data.job_involvement or 3
+        wl_balance = form_data.work_life_balance or 3
 
         perf_val = form_data.performance_rating or 3
         ibm_perf = 4 if perf_val >= 4 else 3
         ibm_overtime = 1 if (form_data.overtime or 0) >= 4 else 0
         travel_val = form_data.business_travel or 1
         
-        if travel_val >= 5: ibm_travel = 2
+        if travel_val >= 4: ibm_travel = 2
         elif travel_val >= 2: ibm_travel = 1
         else: ibm_travel = 0
 
@@ -107,18 +100,18 @@ class FormAnalysisService:
         scaled_score = (raw_probability - min_expected) / (max_expected - min_expected)
         base_ml_score = max(0.0, min(1.0, scaled_score))
         
-        stress_env = 6 - (form_data.environment_satisfaction or 3)
-        stress_job = 6 - (form_data.job_satisfaction or 3)
-        stress_inv = 6 - (form_data.job_involvement or 3)
-        stress_wlb = 6 - (form_data.work_life_balance or 3)
-        stress_perf = 6 - (form_data.performance_rating or 3)
+        stress_env = 5 - (form_data.environment_satisfaction or 3)
+        stress_job = 5 - (form_data.job_satisfaction or 3)
+        stress_inv = 5 - (form_data.job_involvement or 3)
+        stress_wlb = 5 - (form_data.work_life_balance or 3)
+        stress_perf = 5 - (form_data.performance_rating or 3)
         
         stress_ot = form_data.overtime or 1
         stress_travel = form_data.business_travel or 1
         
         total_stress_points = stress_env + stress_job + stress_inv + stress_wlb + stress_perf + stress_ot + stress_travel
         
-        normalized_form_stress = (total_stress_points - 7) / 28.0 
+        normalized_form_stress = (total_stress_points - 7) / 21.0 
         
         normalized_form_stress = max(0.0, min(1.0, normalized_form_stress))
         
