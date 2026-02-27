@@ -6,9 +6,9 @@ from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRep
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateBase, WeeklyBurnoutFormCreate
 from app.models.user_model import UserModel
 from app.models.employee_model import EmployeeModel
-from app.models.company_admin_model import CompanyAdminModel
+from app.models.company_model import CompanyModel
 from app.services.audio_service import AudioTranscriptionService
-from app.services.form_analysis_service import FormAnalysisService 
+from app.services.form_analysis_service import FormAnalysisService  
 
 class WeeklyBurnoutFormService:
     @staticmethod
@@ -52,8 +52,10 @@ class WeeklyBurnoutFormService:
                 status_code=status.HTTP_404_NOT_FOUND, 
                 detail="Employee not found"
             )
+            
+        company = db.query(CompanyModel).filter(CompanyModel.id == employee.company_id).first()
 
-        calculated_form_score = FormAnalysisService.predict_burnout(form_data, employee)
+        calculated_form_score = FormAnalysisService.predict_burnout(form_data, employee, company)
         form_create_data = WeeklyBurnoutFormCreate(
             **form_data.model_dump(),
             employee_id=employee.id,

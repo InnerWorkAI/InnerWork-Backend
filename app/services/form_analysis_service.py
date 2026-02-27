@@ -3,8 +3,12 @@ import joblib
 import xgboost
 import numpy as np
 from datetime import date
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateBase
 from app.models.employee_model import EmployeeModel
+from app.models.company_model import CompanyModel
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "ml_models", "employee_attrition.joblib")
@@ -34,12 +38,35 @@ class FormAnalysisService:
             return default_value
         return field.value if hasattr(field, "value") else field
 
+    @staticmethod
+    def _calculate_distance(employee_address: str, company_address: str) -> int:
+        if not employee_address or not company_address:
+            return 10 
+            
+        try:
+            geolocator = Nominatim(user_agent="innerwork_backend_app_v1")
+            
+            loc1 = geolocator.geocode(employee_address, timeout=10)
+            loc2 = geolocator.geocode(company_address, timeout=10)
+            
+            if loc1 and loc2:
+                dist = geodesic((loc1.latitude, loc1.longitude), (loc2.latitude, loc2.longitude)).kilometers
+                return int(round(dist))
+            return 10
+        except (GeocoderTimedOut, GeocoderServiceError, Exception) as e:
+            print(f"[WARNING] Geocoding fail for '{employee_address}' & '{company_address}': {e}. Enforcing default distance of 10.")
+            return 10
+
     @classmethod
-    def predict_burnout(cls, form_data: WeeklyBurnoutFormCreateBase, employee: EmployeeModel = None) -> float:
+    def predict_burnout(cls, form_data: WeeklyBurnoutFormCreateBase, employee: EmployeeModel = None, company: CompanyModel = None) -> float:
         cls._load_model()
         
         age = cls._calculate_years(employee.birth_date) if employee and employee.birth_date else 30
-        distance = 10 
+        
+        emp_address = employee.home_address if employee else None
+        comp_address = company.address if company else None
+        distance = cls._calculate_distance(emp_address, comp_address)
+        print(f"[DEBUG] Geodesic Distance from {emp_address} to {comp_address}: {distance} km")
         
         education = cls._get_enum_value(employee.education if employee else None, 3)
         gender_val = cls._get_enum_value(employee.gender if employee else None, 1)
@@ -109,9 +136,11 @@ class FormAnalysisService:
         stress_ot = form_data.overtime or 1
         stress_travel = form_data.business_travel or 1
         
-        total_stress_points = stress_env + stress_job + stress_inv + stress_wlb + stress_perf + stress_ot + stress_travel
+        distance_stress = min(4.0, max(0.0, (distance - 10) / 10.0))
         
-        normalized_form_stress = (total_stress_points - 7) / 21.0 
+        total_stress_points = stress_env + stress_job + stress_inv + stress_wlb + stress_perf + stress_ot + stress_travel + distance_stress
+        
+        normalized_form_stress = (total_stress_points - 7) / 25.0 
         
         normalized_form_stress = max(0.0, min(1.0, normalized_form_stress))
         
