@@ -39,17 +39,29 @@ class BurnoutAgent:
             decision = await BurnoutAgent.decide(agent_input)
             logger.info(f"Decision from agent: {decision}")
 
-            # Ejecutar acción
-            await execute_action(decision, company_id, db, company_data=company_data)
+            # Ejecutar acciones
+            actions = decision.get("actions", [])
+            risk_level = decision.get("risk_level", "LOW")
+            
+            decision_taken_list = []
+            
+            for action_item in actions:
+                # Inyectar el risk_level global en la acción individual si es necesario para compatibilidad
+                action_item["risk_level"] = risk_level
+                await execute_action(action_item, company_id, db, company_data=company_data)
+                decision_taken_list.append(action_item.get("action", "unknown"))
+                
             logger.info("Actions executed successfully")
 
             # Guardar memoria organizacional
+            decision_taken_str = ", ".join(decision_taken_list) if decision_taken_list else "no_action"
+            
             await BurnoutReportRepository.save_company_report(
                 company_id=company_id,
                 average_burnout=company_data["average_burnout"],
-                risk_level=decision.get("risk_level"),
-                decision_taken=decision.get("action"),
-                reasoning=decision.get("reasoning"),
+                risk_level=risk_level,
+                decision_taken=decision_taken_str,
+                reasoning=decision.get("overall_reasoning", ""),
                 db=db
             )
             logger.info("Company report saved successfully")
@@ -79,16 +91,14 @@ class BurnoutAgent:
         except json.JSONDecodeError:
             logger.warning("Failed to parse agent JSON response, returning no_action")
             return {
-                "action": "no_action",
+                "actions": [{"action": "no_action", "reasoning": "Model response parsing failed.", "target_employees": []}],
                 "risk_level": "LOW",
-                "reasoning": "Model response parsing failed.",
-                "target_employees": []
+                "overall_reasoning": "Model response parsing failed."
             }
         except Exception as e:
             logger.exception(f"LLM call failed: {e}")
             return {
-                "action": "no_action",
+                "actions": [{"action": "no_action", "reasoning": f"LLM call failed: {e}", "target_employees": []}],
                 "risk_level": "LOW",
-                "reasoning": f"LLM call failed: {e}",
-                "target_employees": []
+                "overall_reasoning": f"LLM call failed: {e}"
             }
