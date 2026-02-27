@@ -8,6 +8,7 @@ from app.models.user_model import UserModel
 from app.models.employee_model import EmployeeModel
 from app.models.company_admin_model import CompanyAdminModel
 from app.services.audio_service import AudioTranscriptionService
+from app.services.form_analysis_service import FormAnalysisService 
 
 class WeeklyBurnoutFormService:
     @staticmethod
@@ -52,11 +53,12 @@ class WeeklyBurnoutFormService:
                 detail="Employee not found"
             )
 
+        calculated_form_score = FormAnalysisService.predict_burnout(form_data, employee)
         form_create_data = WeeklyBurnoutFormCreate(
             **form_data.model_dump(),
             employee_id=employee.id,
             written_feedback=None,
-            burnout_score=0.0
+            burnout_score=calculated_form_score
         )
         created_form = WeeklyBurnoutFormRepository.create(db, form_create_data)
 
@@ -68,9 +70,7 @@ class WeeklyBurnoutFormService:
                             status_code=status.HTTP_400_BAD_REQUEST, 
                             detail=f"The file {image.filename} is not a valid image"
                         )
-                    
                     image_bytes = image.file.read()
-                    
 
         if audio and audio.filename:
             if not audio.content_type.startswith("audio/"):
@@ -80,6 +80,7 @@ class WeeklyBurnoutFormService:
                 )
 
             audio_bytes = audio.file.read()
+
 
             background_tasks.add_task(
                 AudioTranscriptionService.process_audio_to_text,
@@ -101,7 +102,6 @@ class WeeklyBurnoutFormService:
                 status_code=status.HTTP_404_NOT_FOUND, 
                 detail="Form not found"
             )
-        
         WeeklyBurnoutFormService._check_permissions(db, form, current_user)
         return form
     
