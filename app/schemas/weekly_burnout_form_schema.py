@@ -13,12 +13,14 @@ class WeeklyBurnoutFormCreateBase(BaseModel):
 
 class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateBase):
     employee_id: int = Field(..., description="ID of the employee to whom the form belongs") 
-    burnout_score: Optional[float] = Field(0.0, description="Calculated or manually entered burnout score") 
+    burnout_score: Optional[str] = Field(None, description="Calculated burnout score string") 
+    final_burnout_score: Optional[float] = Field(None, description="Dynamic average of available ML results")
     written_feedback: Optional[str] = Field(None, description="Optional written feedback or audio transcription")
 
 class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
     id: int
     created_at: datetime
+    final_burnout_score: Optional[float]
 
     class Config:
         from_attributes = True

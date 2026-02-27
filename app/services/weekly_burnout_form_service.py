@@ -8,6 +8,7 @@ from app.models.user_model import UserModel
 from app.models.employee_model import EmployeeModel
 from app.models.company_model import CompanyModel
 from app.services.audio_service import AudioTranscriptionService
+from app.services.image_predictor_service import ImagePredictorService
 from app.services.form_analysis_service import FormAnalysisService  
 
 class WeeklyBurnoutFormService:
@@ -56,14 +57,9 @@ class WeeklyBurnoutFormService:
         company = db.query(CompanyModel).filter(CompanyModel.id == employee.company_id).first()
 
         calculated_form_score = FormAnalysisService.predict_burnout(form_data, employee, company)
-        form_create_data = WeeklyBurnoutFormCreate(
-            **form_data.model_dump(),
-            employee_id=employee.id,
-            written_feedback=None,
-            burnout_score=calculated_form_score
-        )
-        created_form = WeeklyBurnoutFormRepository.create(db, form_create_data)
-
+        form_score_int = int(calculated_form_score * 100)
+        
+        image_score_int = 0
         if images:
             for image in images:
                 if image.filename and image.content_type:
@@ -73,7 +69,12 @@ class WeeklyBurnoutFormService:
                             detail=f"The file {image.filename} is not a valid image"
                         )
                     image_bytes = image.file.read()
+                    img_res = ImagePredictorService.predict_image(image_bytes)
+                    image_score_int = int(img_res["confidence"] * 100)
+                    break 
 
+        text_score_int = 0
+        transcribed_text = None
         if audio and audio.filename:
             if not audio.content_type.startswith("audio/"):
                 raise HTTPException(
@@ -82,13 +83,28 @@ class WeeklyBurnoutFormService:
                 )
 
             audio_bytes = audio.file.read()
+            audio_res = AudioTranscriptionService.test_audio_prediction(audio_bytes)
+            text_score_int = int(audio_res["burnout_score"] * 100)
+            transcribed_text = audio_res["transcribed_text"]
 
+        final_score_string = f"{image_score_int}, {text_score_int}, {form_score_int}"
+        
+        valid_scores = [form_score_int]
+        if image_score_int > 0:
+            valid_scores.append(image_score_int)
+        if text_score_int > 0:
+            valid_scores.append(text_score_int)
+            
+        final_burnout_score = sum(valid_scores) / len(valid_scores)
 
-            background_tasks.add_task(
-                AudioTranscriptionService.process_audio_to_text,
-                created_form.id, 
-                audio_bytes
-            )
+        form_create_data = WeeklyBurnoutFormCreate(
+            **form_data.model_dump(),
+            employee_id=employee.id,
+            written_feedback=transcribed_text,
+            burnout_score=final_score_string,
+            final_burnout_score=round(final_burnout_score, 2)
+        )
+        created_form = WeeklyBurnoutFormRepository.create(db, form_create_data)
 
         return created_form
 

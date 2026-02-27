@@ -22,7 +22,7 @@ def create_burnout_form(
     job_satisfaction: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
     work_life_balance: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
     business_travel: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
-    images: Optional[List[UploadFile]] = File(None, description="Optional images"),
+    images: List[UploadFile] = File(default=[], description="Optional list of images"),
     audio: Optional[UploadFile] = File(None, description="Optional audio file for transcription"),
     current_user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -36,7 +36,7 @@ def create_burnout_form(
         work_life_balance=work_life_balance,
         business_travel=business_travel
     )
-    
+
     return WeeklyBurnoutFormService.create_form(
         db=db, 
         current_user_id=current_user.id, 
