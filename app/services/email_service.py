@@ -124,9 +124,38 @@ class EmailService:
         average_burnout: float,
         risk_level: str,
         executive_summary: str,
-        dashboard_url: str
+        dashboard_url: str,
+        company_data: Optional[dict] = None
     ):
         subject = f"Organizational Burnout Report – {company_name}"
+
+        department_section = ""
+        if company_data and "department_burnout" in company_data:
+            dept_scores_html = "".join([
+                f"<li>{d['name']}: {d['average']}%</li>" for d in company_data["department_burnout"]
+            ])
+            
+            critical_depts_html = ""
+            if company_data.get("critical_departments"):
+                critical_lines = "".join([
+                    f"<li><strong>{d['name']}</strong>: {d['average']}%</li>" for d in company_data["critical_departments"]
+                ])
+                critical_depts_html = f"""
+                <strong style='color:#e11d48;'>Critical Departments (Action Required):</strong>
+                <ul style='color:#e11d48;'>
+                    {critical_lines}
+                </ul>
+                """
+
+            if dept_scores_html:
+                department_section = f"""
+                <strong>Department Breakdown:</strong>
+                <ul>
+                    {dept_scores_html}
+                </ul>
+                {critical_depts_html}
+                <br>
+                """
 
         body = f"""
         Dear Administrator,<br><br>
@@ -135,6 +164,8 @@ class EmailService:
 
         <strong>Average Burnout Level:</strong> {average_burnout:.2f}%<br>
         <strong>Organizational Risk Level:</strong> {risk_level}<br><br>
+
+        {department_section}
 
         <strong>Executive Summary:</strong><br>
         {executive_summary}<br><br>

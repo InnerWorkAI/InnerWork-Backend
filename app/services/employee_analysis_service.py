@@ -5,14 +5,14 @@ from sqlalchemy import func
 from app.models.weekly_burnout_form_model import WeeklyBurnoutFormModel
 
 
-HIGH_THRESHOLD = 7.0
+HIGH_THRESHOLD = 75.0
 
 class EmployeeAnalysisService:
 
     @staticmethod
     async def analyze_employee(employee_id: int, db: Session):
 
-        four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
+        four_weeks_ago = datetime.now() - timedelta(weeks=4)
 
         forms = (
             db.query(WeeklyBurnoutFormModel)
@@ -42,7 +42,7 @@ class EmployeeAnalysisService:
     @staticmethod
     def calculate_employee_trend(employee_id: int, db: Session):
 
-        now = datetime.utcnow()
+        now = datetime.now()
         two_weeks_ago = now - timedelta(weeks=2)
         four_weeks_ago = now - timedelta(weeks=4)
 
@@ -68,9 +68,9 @@ class EmployeeAnalysisService:
         if not recent_avg or not older_avg:
             return "stable"
 
-        if recent_avg > older_avg + 0.5:
+        if recent_avg > older_avg + 5.0:
             return "increasing"
-        elif recent_avg < older_avg - 0.5:
+        elif recent_avg < older_avg - 5.0:
             return "decreasing"
         else:
             return "stable"

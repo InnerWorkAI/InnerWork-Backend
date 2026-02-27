@@ -40,7 +40,7 @@ class BurnoutAgent:
             logger.info(f"Decision from agent: {decision}")
 
             # Ejecutar acción
-            await execute_action(decision, company_id, db)
+            await execute_action(decision, company_id, db, company_data=company_data)
             logger.info("Actions executed successfully")
 
             # Guardar memoria organizacional

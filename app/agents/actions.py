@@ -13,7 +13,7 @@ from app.core.config import settings
 logger = logging.getLogger("uvicorn")
 
 
-async def execute_action(decision: dict, company_id: int, db):
+async def execute_action(decision: dict, company_id: int, db, company_data: dict = None):
     action = decision.get("action")
     target_employees = decision.get("target_employees", [])
     reasoning = decision.get("reasoning", "")
@@ -34,13 +34,16 @@ async def execute_action(decision: dict, company_id: int, db):
         user = db.query(UserModel).filter(UserModel.id == primary_admin.user_id).first()
         admin_email = user.email
 
+        avg_burnout = company_data.get("average_burnout", 0) if company_data else decision.get("average_burnout", 0)
+
         await EmailService.send_company_report_email(
             recipient_email=admin_email,
             company_name=company.name,
-            average_burnout=decision.get("average_burnout", 0),
+            average_burnout=avg_burnout,
             risk_level=decision.get("risk_level", "LOW"),
             executive_summary=reasoning,
-            dashboard_url=f"{settings.FRONTEND_URL}/company/{company_id}/dashboard"
+            dashboard_url=f"{settings.FRONTEND_URL}/company/{company_id}/dashboard",
+            company_data=company_data
         )
 
     elif action == "notify_hr_about_employees":
