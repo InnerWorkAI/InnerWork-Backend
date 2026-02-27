@@ -106,11 +106,19 @@ async def execute_action(decision: dict, company_id: int, db, company_data: dict
             emp = db.query(EmployeeModel).filter(EmployeeModel.id == employee_id).first()
             if not emp:
                 continue
+                
+            # Get real metrics to generate empathetic content
+            analysis = await EmployeeAnalysisService.analyze_employee(employee_id, db)
+            
+            support_recommendations = await ReportGenerationService.generate_employee_support_content(
+                employee_name=emp.first_name,
+                metrics=analysis
+            )
 
             await EmailService.send_employee_support_email(
                 recipient_email=emp.user.email,
                 employee_name=f"{emp.first_name} {emp.last_name}",
-                support_recommendations=reasoning
+                support_recommendations=support_recommendations
             )
 
             await InterventionRepository.save_employee_intervention(
