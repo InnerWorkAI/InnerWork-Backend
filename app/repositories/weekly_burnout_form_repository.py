@@ -35,25 +35,6 @@ class WeeklyBurnoutFormRepository:
         db.commit()
 
     @staticmethod
-    def update_media(db: Session, form_db: WeeklyBurnoutFormModel, image_urls: str, audio_url: str):
-        if image_urls:
-            form_db.image_urls = image_urls
-        if audio_url:
-            form_db.audio_url = audio_url
+    def delete_by_employee_id(db: Session, employee_id: int):
+        db.query(WeeklyBurnoutFormModel).filter(WeeklyBurnoutFormModel.employee_id == employee_id).delete()
         db.commit()
-        db.refresh(form_db)
-        return form_db
-      
-    def exists_this_week(db: Session, employee_id: int) -> bool:
-        today = datetime.now()
-
-        start_of_week = today - timedelta(days=today.weekday())
-        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
-
-        end_of_week = start_of_week + timedelta(days=7)
-
-        return db.query(WeeklyBurnoutFormModel).filter(
-            WeeklyBurnoutFormModel.employee_id == employee_id,
-            WeeklyBurnoutFormModel.created_at >= start_of_week,
-            WeeklyBurnoutFormModel.created_at < end_of_week
-        ).first() is not None

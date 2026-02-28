@@ -38,6 +38,8 @@ tensorflow==2.20.0
 scikit-learn==1.6.1
 joblib
 openai-whisper
+xgboost
+geopy
 
 # AI Agent / HTTP Clients
 openai

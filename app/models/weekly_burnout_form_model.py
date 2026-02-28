@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, DateTime
+from sqlalchemy import DateTime
 from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, Float, Text, ForeignKey, String
+from datetime import datetime
 from app.db.base import Base
 
 class WeeklyBurnoutFormModel(Base):
@@ -10,13 +12,16 @@ class WeeklyBurnoutFormModel(Base):
 
     written_feedback = Column(Text)
 
-    environment_satisfaction = Column(String(50))
-    overtime = Column(String(10))
-    job_involvement = Column(String(50))
-    performance_rating = Column(String(50))
-    job_satisfaction = Column(String(50))
-    work_life_balance = Column(String(50))
-    business_travel = Column(String(50))
-
-    burnout_score = Column(Float)
+    environment_satisfaction = Column(Integer)
+    overtime = Column(Integer)
+    job_involvement = Column(Integer)
+    performance_rating = Column(Integer)
+    job_satisfaction = Column(Integer)
+    work_life_balance = Column(Integer)
+    business_travel = Column(Integer)
+    image_score = Column(Integer, nullable=True)
+    text_score = Column(Integer, nullable=True)
+    form_score = Column(Integer, nullable=True)
+    burnout_score = Column(String)
+    final_burnout_score = Column(Float)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

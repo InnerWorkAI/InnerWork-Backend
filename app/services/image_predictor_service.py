@@ -62,9 +62,9 @@ class ImagePredictorService:
         prediction = model.predict(processed, verbose=0)
 
         class_index = int(np.argmax(prediction))
-        confidence = float(np.max(prediction))
+        
+        confidence = float(prediction[0][1])
 
         return {
-            "predicted_class": class_index,
-            "confidence": round(confidence, 4)
+            "stress_percentage": round(confidence, 4)
         }
