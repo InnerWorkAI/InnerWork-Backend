@@ -2,7 +2,7 @@ from app.agents.burnout_agent import BurnoutAgent
 from app.core.security import get_current_user
 from app.models.employee_model import EmployeeModel
 from app.models.user_model import UserModel
-from fastapi import APIRouter, Depends, Form, File, UploadFile, BackgroundTasks
+from fastapi import APIRouter, Depends, File, UploadFile, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.session import get_db
@@ -19,28 +19,12 @@ router = APIRouter(
 @router.post("/", response_model=WeeklyBurnoutFormResponse, status_code=201)
 def create_burnout_form(
     background_tasks: BackgroundTasks,
-    environment_satisfaction: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
-    overtime: Optional[int] = Form(None, ge=0, le=1, description="0 (No) or 1 (Yes)"),
-    job_involvement: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
-    performance_rating: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
-    job_satisfaction: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
-    work_life_balance: Optional[int] = Form(None, ge=1, le=4, description="Score (1-4)"),
-    business_travel: Optional[int] = Form(None, ge=0, le=2, description="0 (No), 1 (Local), 2 (International)"),
+    form_data: WeeklyBurnoutFormCreateBase = Depends(WeeklyBurnoutFormCreateBase.as_form),
     images: List[UploadFile] = File(default=[], description="Optional list of images"),
     audio: Optional[UploadFile] = File(None, description="Optional audio file for transcription"),
     current_user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    form_data = WeeklyBurnoutFormCreateBase(
-        environment_satisfaction=environment_satisfaction,
-        overtime=overtime,
-        job_involvement=job_involvement,
-        performance_rating=performance_rating,
-        job_satisfaction=job_satisfaction,
-        work_life_balance=work_life_balance,
-        business_travel=business_travel
-    )
-
     form = WeeklyBurnoutFormService.create_form(
         db=db, 
         current_user_id=current_user.id, 
@@ -58,7 +42,7 @@ def create_burnout_form(
         db
     )
 
-    return WeeklyBurnoutFormResponse.from_orm(form)
+    return form
 
 @router.get("/", response_model=List[WeeklyBurnoutFormResponse])
 def get_burnout_forms(

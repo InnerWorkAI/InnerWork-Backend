@@ -30,7 +30,7 @@ class EmployeeAnalysisService:
                 "is_high_risk": False
             }
 
-        average = sum(f.burnout_score for f in forms) / len(forms)
+        average = sum(f.final_burnout_score for f in forms) / len(forms)
 
         trend = EmployeeAnalysisService.calculate_employee_trend(employee_id, db)
 
@@ -48,7 +48,7 @@ class EmployeeAnalysisService:
         four_weeks_ago = now - timedelta(weeks=4)
 
         recent_avg = (
-            db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
+            db.query(func.avg(WeeklyBurnoutFormModel.final_burnout_score))
             .filter(
                 WeeklyBurnoutFormModel.employee_id == employee_id,
                 WeeklyBurnoutFormModel.created_at >= two_weeks_ago
@@ -57,7 +57,7 @@ class EmployeeAnalysisService:
         )
 
         older_avg = (
-            db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
+            db.query(func.avg(WeeklyBurnoutFormModel.final_burnout_score))
             .filter(
                 WeeklyBurnoutFormModel.employee_id == employee_id,
                 WeeklyBurnoutFormModel.created_at >= four_weeks_ago,
