@@ -1,33 +1,29 @@
 from pydantic import BaseModel, Field
-from fastapi import UploadFile, File
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
+class WeeklyBurnoutFormCreateBase(BaseModel):
+    environment_satisfaction: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    overtime: Optional[int] = Field(None, ge=0, le=1, description="0 (No) or 1 (Yes)")
+    job_involvement: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    performance_rating: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    job_satisfaction: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    work_life_balance: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    business_travel: Optional[int] = Field(None, ge=0, le=2, description="0 (No), 1 (Local), 2 (International)")
 
-class WeeklyBurnoutFormCreateRequest(BaseModel):
-
-    # Lista de imágenes y audio
-    images: Optional[List[UploadFile]] = File(None),
-    audio: Optional[UploadFile] = File(None),
-
-    environment_satisfaction: Optional[str] = None
-    overtime: Optional[str] = None
-    job_involvement: Optional[str] = None
-    performance_rating: Optional[str] = None
-    job_satisfaction: Optional[str] = None
-    work_life_balance: Optional[str] = None
-    business_travel: Optional[str] = None
-    
-
-class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateRequest):
-    employee_id: int = Field(..., description="ID del empleado al que pertenece el formulario") 
-    burnout_score: Optional[float] = Field(0, description="Puntaje calculado o ingresado") 
-    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
-
+class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateBase):
+    employee_id: int = Field(..., description="ID of the employee to whom the form belongs") 
+    image_score: Optional[int] = Field(None, description="Image stress percentage")
+    text_score: Optional[int] = Field(None, description="Audio/Text stress percentage")
+    form_score: Optional[int] = Field(None, description="Form metrics stress percentage")
+    burnout_score: Optional[str] = Field(None, description="Calculated burnout score string") 
+    final_burnout_score: Optional[float] = Field(None, description="Dynamic average of available ML results")
+    written_feedback: Optional[str] = Field(None, description="Optional written feedback or audio transcription")
 
 class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
     id: int
     created_at: datetime
+    final_burnout_score: Optional[float]
 
     class Config:
         from_attributes = True

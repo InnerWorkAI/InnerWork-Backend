@@ -42,3 +42,5 @@ numpy
 scikit-learn==1.6.1
 joblib
 openai-whisper
+xgboost
+geopy

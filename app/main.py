@@ -14,7 +14,8 @@ from app.controllers import (
     company_controller,
     weekly_burnout_form_controller,
     employee_controller,
-    image_predictor_controller
+    image_predictor_controller,
+    audio_predictor_controller
 )
 
 from contextlib import asynccontextmanager
@@ -71,3 +72,4 @@ app.include_router(company_controller.router)
 app.include_router(employee_controller.router)
 app.include_router(weekly_burnout_form_controller.router)
 app.include_router(image_predictor_controller.router)
+app.include_router(audio_predictor_controller.router)
