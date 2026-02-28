@@ -46,7 +46,7 @@ class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateBase):
 class WeeklyBurnoutFormResponse(BaseModel):
     id: int
     employee_id: int
-    burnout_score: Optional[float]
+    burnout_score: Optional[str]
     written_feedback: Optional[str]
     environment_satisfaction: Optional[int]
     overtime: Optional[int]
