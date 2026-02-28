@@ -37,9 +37,13 @@ class InterventionRepository:
         )
 
     @staticmethod
-    async def intervention_recently_sent(employee_id: int, db: Session, days: int = 7):
+    async def intervention_recently_sent(employee_id: int, db: Session, action_taken: str = None, days: int = 7):
 
-        last = await InterventionRepository.get_last_intervention(employee_id, db)
+        query = db.query(EmployeeInterventionModel).filter(EmployeeInterventionModel.employee_id == employee_id)
+        if action_taken:
+            query = query.filter(EmployeeInterventionModel.action_taken == action_taken)
+
+        last = query.order_by(EmployeeInterventionModel.created_at.desc()).first()
 
         if not last:
             return False

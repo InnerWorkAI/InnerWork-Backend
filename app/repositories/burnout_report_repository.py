@@ -26,6 +26,27 @@ class BurnoutReportRepository:
         }
 
     @staticmethod
+    async def has_report_been_sent_this_week(company_id: int, db: Session) -> bool:
+        """
+        Check if a company report was already sent this week.
+        """
+        from datetime import datetime, timedelta
+        
+        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        
+        report_count = (
+            db.query(CompanyBurnoutReportModel)
+            .filter(
+                CompanyBurnoutReportModel.company_id == company_id,
+                CompanyBurnoutReportModel.decision_taken.ilike("%send_company_report%"),
+                CompanyBurnoutReportModel.created_at >= one_week_ago
+            )
+            .count()
+        )
+        
+        return report_count > 0
+
+    @staticmethod
     async def save_company_report(
         company_id: int,
         average_burnout: float,

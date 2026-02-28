@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional
 
 from app.services.report_generation_service import ReportGenerationService
 from app.services.email_service import EmailService
+from app.repositories.burnout_report_repository import BurnoutReportRepository
 from app.repositories.intervention_repository import InterventionRepository
 from app.models.company_admin_model import CompanyAdminModel
 from app.models.user_model import UserModel
@@ -17,6 +18,10 @@ logger = logging.getLogger("uvicorn")
 async def _handle_send_company_report(
     action_item: AgentActionItem, company_id: int, db, company_data: Optional[Dict[str, Any]], risk_level: str
 ):
+    if await BurnoutReportRepository.has_report_been_sent_this_week(company_id, db):
+        logger.info(f"Skipping company report for company {company_id} - already sent this week.")
+        return
+
     company = CompanyService.get_company_by_id(db, company_id)
     primary_admin = db.query(CompanyAdminModel).filter(
         CompanyAdminModel.company_id == company_id,
@@ -57,6 +62,19 @@ async def _handle_notify_hr_about_employees(
     employees_data = []
 
     for emp_id in action_item.target_employees:
+        
+        # Check if HR was already notified about this employee recently
+        recently_sent = await InterventionRepository.intervention_recently_sent(
+            employee_id=emp_id, 
+            db=db, 
+            action_taken=ActionType.NOTIFY_HR_ABOUT_EMPLOYEES.value, 
+            days=7
+        )
+        
+        if recently_sent:
+            logger.info(f"Skipping HR notification for employee {emp_id} - already sent recently.")
+            continue
+            
         analysis = await EmployeeAnalysisService.analyze_employee(emp_id, db)
 
         if not analysis.get("is_high_risk", False):
@@ -84,7 +102,7 @@ async def _handle_notify_hr_about_employees(
         )
 
     if not employees_data:
-        logger.info("No real high-risk employees. Email not sent.")
+        logger.info("No real high-risk employees or all already notified. Email not sent.")
         return
 
     enriched_report = await ReportGenerationService.generate_hr_report(
@@ -104,6 +122,19 @@ async def _handle_notify_employee_support(
     action_item: AgentActionItem, company_id: int, db, company_data: Optional[Dict[str, Any]], risk_level: str
 ):
     for employee_id in action_item.target_employees:
+        
+        # Check if employee was already notified recently
+        recently_sent = await InterventionRepository.intervention_recently_sent(
+            employee_id=employee_id, 
+            db=db, 
+            action_taken=ActionType.NOTIFY_EMPLOYEE_SUPPORT.value, 
+            days=7
+        )
+        
+        if recently_sent:
+            logger.info(f"Skipping support email for employee {employee_id} - already sent recently.")
+            continue
+            
         emp = db.query(EmployeeModel).filter(EmployeeModel.id == employee_id).first()
         if not emp:
             continue
