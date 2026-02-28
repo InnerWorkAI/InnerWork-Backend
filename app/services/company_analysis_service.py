@@ -38,13 +38,13 @@ class CompanyAnalysisService:
                 "critical_departments": []
             }
 
-        total_score = sum(f.burnout_score for f in forms if f.burnout_score is not None)
+        total_score = sum(f.final_burnout_score for f in forms if f.final_burnout_score is not None)
         average_burnout = total_score / max(len(forms), 1)
 
-        high_risk_forms = [f for f in forms if f.burnout_score >= CompanyAnalysisService.HIGH_THRESHOLD]
+        high_risk_forms = [f for f in forms if f.final_burnout_score >= CompanyAnalysisService.HIGH_THRESHOLD]
         medium_risk_forms = [
             f for f in forms
-            if CompanyAnalysisService.MEDIUM_THRESHOLD <= f.burnout_score < CompanyAnalysisService.HIGH_THRESHOLD
+            if CompanyAnalysisService.MEDIUM_THRESHOLD <= f.final_burnout_score < CompanyAnalysisService.HIGH_THRESHOLD
         ]
 
         high_risk_percentage = (len(high_risk_forms) / len(forms)) * 100
@@ -57,7 +57,7 @@ class CompanyAnalysisService:
         department_scores = {}
         for form, dept in results:
             if dept is not None:
-                department_scores.setdefault(dept, []).append(form.burnout_score)
+                department_scores.setdefault(dept, []).append(form.final_burnout_score)
 
         department_burnout = []
         critical_departments = []
@@ -95,7 +95,7 @@ class CompanyAnalysisService:
         four_weeks_ago = now - timedelta(weeks=4)
 
         recent_avg = (
-            db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
+            db.query(func.avg(WeeklyBurnoutFormModel.final_burnout_score))
             .join(EmployeeModel)
             .filter(EmployeeModel.company_id == company_id)
             .filter(WeeklyBurnoutFormModel.created_at >= two_weeks_ago)
@@ -103,7 +103,7 @@ class CompanyAnalysisService:
         )
 
         older_avg = (
-            db.query(func.avg(WeeklyBurnoutFormModel.burnout_score))
+            db.query(func.avg(WeeklyBurnoutFormModel.final_burnout_score))
             .join(EmployeeModel)
             .filter(EmployeeModel.company_id == company_id)
             .filter(
