@@ -37,7 +37,7 @@ class EmployeeAnalysisService:
         return {
             "average": round(average, 2),
             "trend": trend,
-            "is_high_risk": average >= HIGH_THRESHOLD
+            "is_high_risk": average >= EmployeeAnalysisService.HIGH_THRESHOLD
         }
 
     @staticmethod

@@ -1,6 +1,11 @@
 from openai import OpenAI
 from app.core.config import settings
-
+from app.agents.prompts import (
+    HR_REPORT_SYSTEM_PROMPT,
+    HR_REPORT_USER_PROMPT_TEMPLATE,
+    EMPLOYEE_SUPPORT_SYSTEM_PROMPT,
+    EMPLOYEE_SUPPORT_USER_PROMPT_TEMPLATE
+)
 
 client = OpenAI(
     api_key=settings.GROQ_API_KEY,
@@ -21,41 +26,17 @@ class ReportGenerationService:
         No layout wrappers.
         """
 
-        prompt = f"""
-        You are an expert, compassionate HR Analyst.
-
-        Create a professional and highly respectful HR burnout risk notification for {company_name}.
-        The tone must be empathetic but urgent.
-
-        IMPORTANT RULES:
-        - Output ONLY a clean HTML snippet.
-        - DO NOT include <html>, <head>, or <body>.
-        - DO NOT include tables.
-        - DO NOT include styling wrappers.
-        - Keep it concise, executive-level, and action-oriented.
-        - No emojis.
-
-        Employees at risk:
-        {employees_data}
-
-        Structure required:
-
-        <h3>Executive Overview</h3>
-        Provide a short professional summary focusing on the importance of acting early to support wellbeing.
-
-        <h3>Employees Requiring Attention</h3>
-        Use a <ul> list mentioning the employee name, burnout score, and trend. Format it cleanly.
-
-        <h3>Recommended Next Steps</h3>
-        Provide bullet points with concrete, supportive actions HR can take (e.g., 1-on-1 check-ins, workload review).
-        """
+        prompt = HR_REPORT_USER_PROMPT_TEMPLATE.format(
+            company_name=company_name,
+            employees_data=employees_data
+        )
 
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {
                     "role": "system",
-                    "content": "You output only clean HTML snippets."
+                    "content": HR_REPORT_SYSTEM_PROMPT
                 },
                 {
                     "role": "user",
@@ -88,28 +69,18 @@ class ReportGenerationService:
         """
         Generates highly personalized, compassionate recommendations for an employee.
         """
-        prompt = f"""
-        You are an empathetic Wellbeing Coach.
-        
-        You need to write a short, supportive, and confidential message snippet to be included in an email for {employee_name}.
-        
-        The employee has an average burnout score of {metrics.get('average', 0)}% and a trend that is '{metrics.get('trend', 'stable')}'.
-        
-        IMPORTANT RULES:
-        - Output ONLY a clean HTML snippet (e.g., a few <p> tags and maybe a <ul>).
-        - DO NOT include <html>, <head>, or <body>.
-        - Do not use a robotic or diagnostic tone. Do not explicitly state their "burnout score is X".
-        - Focus on normalization, support, and practical but gentle recommendations (e.g., taking time off, prioritizing workload, scheduling a chat).
-        - Keep it under 3 paragraphs.
-        - No emojis.
-        """
+        prompt = EMPLOYEE_SUPPORT_USER_PROMPT_TEMPLATE.format(
+            employee_name=employee_name,
+            metrics_average=metrics.get('average', 0),
+            metrics_trend=metrics.get('trend', 'stable')
+        )
 
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {
                     "role": "system",
-                    "content": "You output only clean HTML snippets focusing on employee wellbeing."
+                    "content": EMPLOYEE_SUPPORT_SYSTEM_PROMPT
                 },
                 {
                     "role": "user",
