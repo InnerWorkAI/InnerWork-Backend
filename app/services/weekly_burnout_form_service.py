@@ -7,6 +7,7 @@ from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateBase, 
 from app.models.user_model import UserModel
 from app.models.employee_model import EmployeeModel
 from app.models.company_model import CompanyModel
+from app.models.company_admin_model import CompanyAdminModel
 from app.services.audio_service import AudioTranscriptionService
 from app.services.image_predictor_service import ImagePredictorService
 from app.services.form_analysis_service import FormAnalysisService  

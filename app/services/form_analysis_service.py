@@ -3,9 +3,7 @@ import joblib
 import xgboost
 import numpy as np
 from datetime import date
-from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
-from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateBase
 from app.models.employee_model import EmployeeModel
 from app.models.company_model import CompanyModel
@@ -44,17 +42,22 @@ class FormAnalysisService:
             return 10 
             
         try:
-            geolocator = Nominatim(user_agent="innerwork_backend_app_v1")
-            
-            loc1 = geolocator.geocode(employee_address, timeout=10)
-            loc2 = geolocator.geocode(company_address, timeout=10)
+            def extract_coords(address_str):
+                parts = address_str.split(';')
+                if len(parts) >= 3:
+                    return (float(parts[-2]), float(parts[-1]))
+                return None
+                
+            loc1 = extract_coords(employee_address)
+            loc2 = extract_coords(company_address)
             
             if loc1 and loc2:
-                dist = geodesic((loc1.latitude, loc1.longitude), (loc2.latitude, loc2.longitude)).kilometers
+                dist = geodesic(loc1, loc2).kilometers
                 return int(round(dist))
+            
             return 10
-        except (GeocoderTimedOut, GeocoderServiceError, Exception) as e:
-            print(f"[WARNING] Geocoding fail for '{employee_address}' & '{company_address}': {e}. Enforcing default distance of 10.")
+        except Exception as e:
+            print(f"[WARNING] Geodesic calculation fail for '{employee_address}' & '{company_address}': {e}. Enforcing default distance of 10.")
             return 10
 
     @classmethod
