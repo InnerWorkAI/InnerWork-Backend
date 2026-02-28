@@ -9,6 +9,13 @@ from app.core.security import hash_password
 class CompanyService:
 
     @staticmethod
+    def get_company_by_id(db: Session, company_id: int):
+        company = CompanyRepository.get_by_id(db, company_id)
+        if not company:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found for this admin")
+        return company
+
+    @staticmethod
     def get_company_by_admin_id(db: Session, admin_id: int):
         company = CompanyRepository.get_by_admin_id(db, admin_id)
         if not company:

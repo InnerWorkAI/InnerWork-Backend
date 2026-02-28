@@ -1,44 +1,47 @@
-# Framework
+# Core Framework
 fastapi
 uvicorn[standard]
 
 # Database
 sqlalchemy
 psycopg2-binary
-databases
 
-# Validation / Settings
+# Validation & Configuration
 pydantic
 pydantic-settings
 email-validator
+python-dotenv
 
-# Auth / Security
+# Authentication & Security
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt
 python-multipart
-python-magic 
+python-magic
 
 # Cache
 redis
 aioredis
 
-# Environment variables
-python-dotenv
-
 # Email
 fastapi-mail[aiofiles]
 
+# Scheduler
+apscheduler
+
 # Utilities
-python-multipart
-python-magic
+pillow
+numpy
 
 # Machine Learning
 tensorflow==2.20.0
-pillow
-numpy
 scikit-learn==1.6.1
 joblib
 openai-whisper
 xgboost
 geopy
+
+# AI Agent / HTTP Clients
+openai
+httpx
+tenacity

@@ -1,4 +1,6 @@
+from app.agents.burnout_agent import BurnoutAgent
 from app.core.security import get_current_user
+from app.models.employee_model import EmployeeModel
 from app.models.user_model import UserModel
 from fastapi import APIRouter, Depends, Form, File, UploadFile, BackgroundTasks
 from sqlalchemy.orm import Session
@@ -7,10 +9,12 @@ from app.db.session import get_db
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateBase, WeeklyBurnoutFormResponse
 from app.services.weekly_burnout_form_service import WeeklyBurnoutFormService
 
+
 router = APIRouter(
     prefix="/burnout-forms",
     tags=["Weekly Burnout Forms"]
 )
+
 
 @router.post("/", response_model=WeeklyBurnoutFormResponse, status_code=201)
 def create_burnout_form(
@@ -37,7 +41,7 @@ def create_burnout_form(
         business_travel=business_travel
     )
 
-    return WeeklyBurnoutFormService.create_form(
+    form = WeeklyBurnoutFormService.create_form(
         db=db, 
         current_user_id=current_user.id, 
         form_data=form_data,
@@ -45,6 +49,16 @@ def create_burnout_form(
         audio=audio,
         background_tasks=background_tasks
     )
+
+    company_id = db.query(EmployeeModel.company_id).filter(EmployeeModel.id == form.employee_id).scalar()
+
+    background_tasks.add_task(
+        BurnoutAgent.run,
+        company_id,
+        db
+    )
+
+    return WeeklyBurnoutFormResponse.from_orm(form)
 
 @router.get("/", response_model=List[WeeklyBurnoutFormResponse])
 def get_burnout_forms(
@@ -68,6 +82,14 @@ def get_burnout_form(
     current_user: UserModel = Depends(get_current_user) 
 ):
     return WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
+
+@router.get("/employee/{employee_id}/has-this-week")
+def has_burnout_form_this_week(
+    employee_id: int,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return WeeklyBurnoutFormService.has_form_this_week(db, current_user.id, employee_id)
 
 @router.delete("/{form_id}")
 def delete_burnout_form(

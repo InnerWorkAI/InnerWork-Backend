@@ -20,8 +20,19 @@ class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateBase):
     final_burnout_score: Optional[float] = Field(None, description="Dynamic average of available ML results")
     written_feedback: Optional[str] = Field(None, description="Optional written feedback or audio transcription")
 
-class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
+# Response serializable
+class WeeklyBurnoutFormResponse(BaseModel):
     id: int
+    employee_id: int
+    burnout_score: Optional[float]
+    written_feedback: Optional[str]
+    environment_satisfaction: Optional[str]
+    overtime: Optional[str]
+    job_involvement: Optional[str]
+    performance_rating: Optional[str]
+    job_satisfaction: Optional[str]
+    work_life_balance: Optional[str]
+    business_travel: Optional[str]
     created_at: datetime
     final_burnout_score: Optional[float]
 

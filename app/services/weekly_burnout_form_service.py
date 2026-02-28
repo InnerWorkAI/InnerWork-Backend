@@ -142,3 +142,10 @@ class WeeklyBurnoutFormService:
         form = WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
         WeeklyBurnoutFormRepository.delete(db, form)
         return {"message": "Form deleted successfully"}
+
+    @staticmethod
+    def has_form_this_week(db: Session, current_user_id: int, employee_id: int):
+        EmployeeService._check_employee_permissions(db, current_user_id, employee_id)
+
+        exists = WeeklyBurnoutFormRepository.exists_this_week(db, employee_id)
+        return {"has_form_this_week": exists}

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models.weekly_burnout_form_model import WeeklyBurnoutFormModel
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreate
@@ -13,7 +14,7 @@ class WeeklyBurnoutFormRepository:
         return db_form
 
     @staticmethod
-    def get_all(db: Session, current_user_id: int):
+    def get_all(db: Session):
         return db.query(WeeklyBurnoutFormModel).all()
 
     @staticmethod
