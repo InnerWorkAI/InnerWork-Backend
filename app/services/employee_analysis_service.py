@@ -5,9 +5,10 @@ from sqlalchemy import func
 from app.models.weekly_burnout_form_model import WeeklyBurnoutFormModel
 
 
-HIGH_THRESHOLD = 75.0
 
 class EmployeeAnalysisService:
+
+    HIGH_THRESHOLD = 75.0
 
     @staticmethod
     async def analyze_employee(employee_id: int, db: Session):
