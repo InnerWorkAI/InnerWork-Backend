@@ -1,5 +1,5 @@
 from app.core.security import create_reset_token, hash_password, verify_reset_token
-from app.services.email_service import send_email
+from app.services.email_service import EmailService
 from sqlalchemy.orm import Session
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_schema import UserCreate
@@ -51,7 +51,7 @@ class UserService:
         token = create_reset_token(user.id)
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
 
-        await send_email(
+        await EmailService.send_email(
             recipient_email=user.email,
             subject="Reset Your Password",
             title="Reset Your Password",

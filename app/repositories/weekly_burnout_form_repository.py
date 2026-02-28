@@ -14,8 +14,7 @@ class WeeklyBurnoutFormRepository:
         return db_form
 
     @staticmethod
-    def get_all(db: Session, current_user_id: int):
-        # 
+    def get_all(db: Session):
         return db.query(WeeklyBurnoutFormModel).all()
 
     @staticmethod
@@ -36,15 +35,10 @@ class WeeklyBurnoutFormRepository:
         db.commit()
 
     @staticmethod
-    def update_media(db: Session, form_db: WeeklyBurnoutFormModel, image_urls: str, audio_url: str):
-        if image_urls:
-            form_db.image_urls = image_urls
-        if audio_url:
-            form_db.audio_url = audio_url
+    def delete_by_employee_id(db: Session, employee_id: int):
+        db.query(WeeklyBurnoutFormModel).filter(WeeklyBurnoutFormModel.employee_id == employee_id).delete()
         db.commit()
-        db.refresh(form_db)
-        return form_db
-      
+
     def exists_this_week(db: Session, employee_id: int) -> bool:
         today = datetime.now()
 

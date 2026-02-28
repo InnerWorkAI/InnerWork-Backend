@@ -1,33 +1,62 @@
 from pydantic import BaseModel, Field
-from fastapi import UploadFile, File
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
+from fastapi import Form
 
+class WeeklyBurnoutFormCreateBase(BaseModel):
+    environment_satisfaction: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    overtime: Optional[int] = Field(None, ge=0, le=1, description="0 (No) or 1 (Yes)")
+    job_involvement: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    performance_rating: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    job_satisfaction: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    work_life_balance: Optional[int] = Field(None, ge=1, le=4, description="Score from 1 to 4")
+    business_travel: Optional[int] = Field(None, ge=0, le=2, description="0 (No), 1 (Local), 2 (International)")
 
-class WeeklyBurnoutFormCreateRequest(BaseModel):
+    @classmethod
+    def as_form(
+        cls,
+        environment_satisfaction: Optional[int] = Form(None, ge=1, le=4, description="Score from 1 to 4"),
+        overtime: Optional[int] = Form(None, ge=0, le=1, description="0 (No) or 1 (Yes)"),
+        job_involvement: Optional[int] = Form(None, ge=1, le=4, description="Score from 1 to 4"),
+        performance_rating: Optional[int] = Form(None, ge=1, le=4, description="Score from 1 to 4"),
+        job_satisfaction: Optional[int] = Form(None, ge=1, le=4, description="Score from 1 to 4"),
+        work_life_balance: Optional[int] = Form(None, ge=1, le=4, description="Score from 1 to 4"),
+        business_travel: Optional[int] = Form(None, ge=0, le=2, description="0 (No), 1 (Local), 2 (International)")
+    ) -> "WeeklyBurnoutFormCreateBase":
+        return cls(
+            environment_satisfaction=environment_satisfaction,
+            overtime=overtime,
+            job_involvement=job_involvement,
+            performance_rating=performance_rating,
+            job_satisfaction=job_satisfaction,
+            work_life_balance=work_life_balance,
+            business_travel=business_travel
+        )
 
-    # Lista de imágenes y audio
-    images: Optional[List[UploadFile]] = File(None),
-    audio: Optional[UploadFile] = File(None),
+class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateBase):
+    employee_id: int = Field(..., description="ID of the employee to whom the form belongs") 
+    image_score: Optional[int] = Field(None, description="Image stress percentage")
+    text_score: Optional[int] = Field(None, description="Audio/Text stress percentage")
+    form_score: Optional[int] = Field(None, description="Form metrics stress percentage")
+    burnout_score: Optional[str] = Field(None, description="Calculated burnout score string") 
+    final_burnout_score: Optional[float] = Field(None, description="Dynamic average of available ML results")
+    written_feedback: Optional[str] = Field(None, description="Optional written feedback or audio transcription")
 
-    environment_satisfaction: Optional[str] = None
-    overtime: Optional[str] = None
-    job_involvement: Optional[str] = None
-    performance_rating: Optional[str] = None
-    job_satisfaction: Optional[str] = None
-    work_life_balance: Optional[str] = None
-    business_travel: Optional[str] = None
-    
-
-class WeeklyBurnoutFormCreate(WeeklyBurnoutFormCreateRequest):
-    employee_id: int = Field(..., description="ID del empleado al que pertenece el formulario") 
-    burnout_score: Optional[float] = Field(0, description="Puntaje calculado o ingresado") 
-    written_feedback: Optional[str] = Field(None, description="Comentarios escritos opcionales")
-
-
-class WeeklyBurnoutFormResponse(WeeklyBurnoutFormCreate):
+# Response serializable
+class WeeklyBurnoutFormResponse(BaseModel):
     id: int
+    employee_id: int
+    burnout_score: Optional[str]
+    written_feedback: Optional[str]
+    environment_satisfaction: Optional[int]
+    overtime: Optional[int]
+    job_involvement: Optional[int]
+    performance_rating: Optional[int]
+    job_satisfaction: Optional[int]
+    work_life_balance: Optional[int]
+    business_travel: Optional[int]
     created_at: datetime
+    final_burnout_score: Optional[float]
 
     class Config:
         from_attributes = True
