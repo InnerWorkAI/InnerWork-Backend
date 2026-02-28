@@ -71,7 +71,7 @@ class WeeklyBurnoutFormService:
                         )
                     image_bytes = image.file.read()
                     img_res = ImagePredictorService.predict_image(image_bytes)
-                    image_score_int = int(img_res["confidence"] * 100)
+                    image_score_int = int(img_res["stress_percentage"] * 100)
                     break 
 
         text_score_int = 0
