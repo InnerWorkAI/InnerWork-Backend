@@ -71,7 +71,7 @@ class WeeklyBurnoutFormService:
                         )
                     image_bytes = image.file.read()
                     img_res = ImagePredictorService.predict_image(image_bytes)
-                    image_score_int = int(img_res["confidence"] * 100)
+                    image_score_int = int(img_res["stress_percentage"] * 100)
                     break 
 
         text_score_int = 0
@@ -114,7 +114,7 @@ class WeeklyBurnoutFormService:
 
     @staticmethod
     def get_all_forms(db: Session, current_user: UserModel):
-        return WeeklyBurnoutFormRepository.get_all(db, current_user.id)
+        return WeeklyBurnoutFormRepository.get_all(db)
 
     @staticmethod
     def get_form_by_id(db: Session, form_id: int, current_user: UserModel):
@@ -138,11 +138,11 @@ class WeeklyBurnoutFormService:
         return WeeklyBurnoutFormRepository.get_last_by_employee_id(db, employee_id)
 
     @staticmethod
-    def delete_form(db: Session, form_id: int):
-        form = WeeklyBurnoutFormService.get_form_by_id(db, form_id)
+    def delete_form(db: Session, form_id: int, current_user: UserModel):
+        form = WeeklyBurnoutFormService.get_form_by_id(db, form_id, current_user)
         WeeklyBurnoutFormRepository.delete(db, form)
-        return {"message": "Formulario eliminado correctamente"}
-    
+        return {"message": "Form deleted successfully"}
+
     @staticmethod
     def has_form_this_week(db: Session, current_user_id: int, employee_id: int):
         EmployeeService._check_employee_permissions(db, current_user_id, employee_id)

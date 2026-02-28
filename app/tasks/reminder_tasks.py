@@ -5,7 +5,7 @@ from app.db.session import SessionLocal
 from app.models.employee_model import EmployeeModel
 from app.models.user_model import UserModel
 from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
-from app.services.email_service import send_email
+from app.services.email_service import EmailService
 from app.core.config import settings
 
 scheduler = AsyncIOScheduler()
@@ -24,7 +24,7 @@ async def _send_reminders_to_pending():
             if not WeeklyBurnoutFormRepository.exists_this_week(db, emp.id):
 
                 form_url = f"{settings.FRONTEND_URL}/weekly-burnout-form"
-                await send_email(
+                await EmailService.send_email(
                     recipient_email=emp.user.email,
                     subject="Reminder: Complete Your Weekly Burnout Form",
                     title="Weekly Burnout Form Reminder",

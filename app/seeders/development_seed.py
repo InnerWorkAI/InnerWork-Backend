@@ -110,13 +110,13 @@ def run_development_seed():
                 first_name=f"Empleado{i}",
                 last_name="Test",
                 birth_date=date(1990, 1, i),
-                gender=random.choice(genders).name,
-                marital_status=random.choice(marital_statuses).name,
-                department=random.choice(departments).name,
-                education=random.choice(educations).name,
-                education_field=random.choice(education_fields).name,
-                job_level=random.choice(job_levels).name,
-                job_role=random.choice(job_roles).name,
+                gender=random.choice(genders).value,
+                marital_status=random.choice(marital_statuses).value,
+                department=random.choice(departments).value,
+                education=random.choice(educations).value,
+                education_field=random.choice(education_fields).value,
+                job_level=random.choice(job_levels).value,
+                job_role=random.choice(job_roles).value,
                 monthly_salary=3000 + i * 500,
                 percent_salary_hike=random.randint(5, 15)
             )
@@ -129,36 +129,32 @@ def run_development_seed():
         # 5️⃣ Crear Formularios
         # ==========================
         for idx, employee in enumerate(employees):
-            high_risk = idx >= 5  # últimos 3 empleados con alto riesgo
+            high_risk = idx == 0  # Solo un empleado con alto riesgo para simular "isolated employee burnout"
 
             for week in range(4):  # 4 semanas
                 created_date = date.today() - timedelta(days=7 * week)
                 burnout_score = (
-                    round(random.uniform(75, 95), 2) if high_risk
+                    round(random.uniform(85, 100), 2) if high_risk
                     else round(random.uniform(20, 60), 2)
                 )
 
                 form = WeeklyBurnoutFormModel(
                     employee_id=employee.id,
                     written_feedback="Mucho estrés reciente" if high_risk else "Semana normal",
-                    environment_satisfaction="Low" if high_risk else "High",
-                    overtime="Yes" if high_risk else "No",
-                    job_involvement="High",
-                    performance_rating="Medium",
-                    job_satisfaction="Low" if high_risk else "High",
-                    work_life_balance="Poor" if high_risk else "Good",
-                    business_travel="Frequent" if high_risk else "Rare",
-                    burnout_score=burnout_score,
+                    environment_satisfaction=1 if high_risk else 4,
+                    overtime=1 if high_risk else 0,
+                    job_involvement=4,
+                    performance_rating=3,
+                    job_satisfaction=1 if high_risk else 4,
+                    work_life_balance=1 if high_risk else 4,
+                    business_travel=2 if high_risk else 0,
+                    burnout_score=str(burnout_score),
+                    final_burnout_score=burnout_score,
                     created_at=created_date
                 )
                 db.add(form)
 
         db.commit()
-
-        print("✅ Development Seed completado correctamente.")
-        print("📌 Admin principal: admin@tech.com / Admin123")
-        print("📌 Admin secundario: hr@tech.com / Admin123")
-        print("📌 Empleados: employee1@tech.com - Employee123")
 
     except Exception as e:
         db.rollback()

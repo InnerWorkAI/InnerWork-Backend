@@ -12,8 +12,8 @@ class AudioTranscriptionService:
     @classmethod
     def _get_whisper_model(cls):
         if cls._whisper_model is None:
-            print("[INFO] Loading Whisper 'tiny' model into memory...")
-            cls._whisper_model = whisper.load_model("tiny", device="cpu")
+            print("[INFO] Loading Whisper 'base' model into memory...")
+            cls._whisper_model = whisper.load_model("base", device="cpu")
             print("[INFO] Whisper model ready.")
         return cls._whisper_model
 

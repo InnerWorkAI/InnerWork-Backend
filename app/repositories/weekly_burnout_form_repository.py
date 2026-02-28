@@ -14,7 +14,7 @@ class WeeklyBurnoutFormRepository:
         return db_form
 
     @staticmethod
-    def get_all(db: Session, current_user_id: int):
+    def get_all(db: Session):
         return db.query(WeeklyBurnoutFormModel).all()
 
     @staticmethod
@@ -35,6 +35,10 @@ class WeeklyBurnoutFormRepository:
         db.commit()
 
     @staticmethod
+    def delete_by_employee_id(db: Session, employee_id: int):
+        db.query(WeeklyBurnoutFormModel).filter(WeeklyBurnoutFormModel.employee_id == employee_id).delete()
+        db.commit()
+
     def exists_this_week(db: Session, employee_id: int) -> bool:
         today = datetime.now()
 
@@ -48,7 +52,3 @@ class WeeklyBurnoutFormRepository:
             WeeklyBurnoutFormModel.created_at >= start_of_week,
             WeeklyBurnoutFormModel.created_at < end_of_week
         ).first() is not None
-    
-    def delete_by_employee_id(db: Session, employee_id: int):
-        db.query(WeeklyBurnoutFormModel).filter(WeeklyBurnoutFormModel.employee_id == employee_id).delete()
-        db.commit()
