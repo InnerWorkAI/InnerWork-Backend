@@ -55,7 +55,7 @@ def get_burnout_forms(
 def get_burnout_forms_by_employee(employee_id: int, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     return WeeklyBurnoutFormService.get_forms_by_employee(db, current_user.id, employee_id)
 
-@router.get("/employee/{employee_id}/last", response_model=WeeklyBurnoutFormResponse)
+@router.get("/employee/{employee_id}/last", response_model=WeeklyBurnoutFormResponse | None)
 def get_last_burnout_form_by_employee(employee_id: int, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     return WeeklyBurnoutFormService.get_last_form_by_employee(db, current_user.id, employee_id)
 
