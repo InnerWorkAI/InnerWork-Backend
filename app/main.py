@@ -3,6 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+import gc
 
 from app.db.base import Base
 from app.db.session import engine
@@ -61,7 +62,6 @@ async def lifespan(app: FastAPI):
     
     yield
     logger.info("Application shutting down...")
-
 
 # FastAPI app instance
 app = FastAPI(
