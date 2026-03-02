@@ -12,8 +12,8 @@ class AudioTranscriptionService:
     @classmethod
     def _get_whisper_model(cls):
         if cls._whisper_model is None:
-            print("[INFO] Loading Whisper 'base' model into memory...")
-            cls._whisper_model = whisper.load_model("base", device="cpu")
+            print("[INFO] Loading Whisper 'small' model into memory...")
+            cls._whisper_model = whisper.load_model("small", device="cpu")
             print("[INFO] Whisper model ready.")
         return cls._whisper_model
 
@@ -35,7 +35,8 @@ class AudioTranscriptionService:
                 result = model.transcribe(
                     tmp_file_path, 
                     task="transcribe", 
-                    fp16=False
+                    fp16=False,
+                    language="en"
                 )
                 
                 transcribed_text = result["text"].strip()
@@ -81,7 +82,7 @@ class AudioTranscriptionService:
             
             try:
                 print(f"[INFO] Whisper is transcribing for test endpoint...")
-                result = model.transcribe(tmp_file_path, task="transcribe", fp16=False)
+                result = model.transcribe(tmp_file_path, task="transcribe", fp16=False, language="en")
                 transcribed_text = result["text"].strip()
                 
                 print("[INFO] Analyzing text for test burnout score...")
