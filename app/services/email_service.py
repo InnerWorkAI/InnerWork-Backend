@@ -1,18 +1,10 @@
-from app.services.report_generation_service import ReportGenerationService
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from app.core.config import settings
-from typing import List, Optional
+import os
+import resend
 
-conf = ConnectionConfig(
-    MAIL_USERNAME=settings.MAIL_USERNAME,
-    MAIL_PASSWORD=settings.MAIL_PASSWORD,
-    MAIL_FROM=settings.MAIL_FROM,
-    MAIL_PORT=settings.MAIL_PORT,
-    MAIL_SERVER=settings.MAIL_SERVER,
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=True
-)
+from app.core.config import settings
+from typing import Optional
+
+resend.api_key = settings.RESEND_API_KEY
 
 class EmailService:
 
@@ -105,15 +97,12 @@ class EmailService:
         </html>
         """
 
-        message = MessageSchema(
-            subject=subject,
-            recipients=[recipient_email],
-            body=html_content,
-            subtype="html"
-        )
-
-        fm = FastMail(conf)
-        await fm.send_message(message)
+        resend.Emails.send({
+            "from": settings.EMAIL_FROM,
+            "to": [recipient_email],
+            "subject": subject,
+            "html": html_content
+        })
         
 
         

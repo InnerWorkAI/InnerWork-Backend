@@ -13,12 +13,9 @@ class Settings(BaseSettings):
     # Reset password
     RESET_TOKEN_EXPIRE_MINUTES: int
 
-    # Mail
-    MAIL_USERNAME: str
-    MAIL_PASSWORD: str
-    MAIL_FROM: str
-    MAIL_PORT: int
-    MAIL_SERVER: str
+    # Resend
+    RESEND_API_KEY: str
+    EMAIL_FROM: str
 
     FRONTEND_URL: str
 

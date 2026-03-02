@@ -19,9 +19,6 @@ bcrypt
 python-multipart
 python-magic
 
-# Email
-fastapi-mail[aiofiles]
-
 # Scheduler
 apscheduler
 
@@ -41,3 +38,6 @@ geopy
 openai
 httpx
 tenacity
+
+# Resend Email
+resend
