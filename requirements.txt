@@ -19,10 +19,6 @@ bcrypt
 python-multipart
 python-magic
 
-# Cache
-redis
-aioredis
-
 # Email
 fastapi-mail[aiofiles]
 

@@ -5,7 +5,6 @@ class Settings(BaseSettings):
     ENV: str = "development"
 
     DATABASE_URL: str
-    REDIS_URL: str
 
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int

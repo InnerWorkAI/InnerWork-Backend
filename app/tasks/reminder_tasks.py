@@ -45,23 +45,23 @@ def start_scheduler():
     - For production: every Friday at 9 AM
     """
 
-    scheduler.add_job(
-        _send_reminders_to_pending,
-        trigger='interval', 
-        minutes=2,
-        id='weekly_form_reminder',
-        replace_existing=True
-    )
-
     # scheduler.add_job(
     #     _send_reminders_to_pending,
-    #     trigger='cron',
-    #     day_of_week='fri',
-    #     hour=9,
-    #     minute=0,
-    #     id='weekly_form_reminder_weekly',
+    #     trigger='interval', 
+    #     minutes=2,
+    #     id='weekly_form_reminder',
     #     replace_existing=True
     # )
+
+    scheduler.add_job(
+        _send_reminders_to_pending,
+        trigger='cron',
+        day_of_week='fri',
+        hour=9,
+        minute=0,
+        id='weekly_form_reminder_weekly',
+        replace_existing=True
+    )
 
     scheduler.start()
     print("🕒 Scheduler started successfully")
