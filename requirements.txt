@@ -1,0 +1,43 @@
+# Core Framework
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+psycopg2-binary
+
+# Validation & Configuration
+pydantic
+pydantic-settings
+email-validator
+python-dotenv
+
+# Authentication & Security
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+python-multipart
+python-magic
+
+# Scheduler
+apscheduler
+
+# Utilities
+pillow
+numpy
+opencv-python-headless
+
+# Machine Learning
+tensorflow==2.20.0
+scikit-learn==1.6.1
+joblib
+xgboost
+geopy
+
+# AI Agent / HTTP Clients
+openai
+httpx
+tenacity
+
+# Resend Email
+resend
