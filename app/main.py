@@ -1,6 +1,7 @@
 import logging
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import gc
@@ -72,6 +73,17 @@ app = FastAPI(
     openapi_url="/openapi.json",
     lifespan=lifespan
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://web.innerwork-ai.es"
+        "http://localhost:4200"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Create uploads directory if it doesn't exist
 os.makedirs("uploads/profile_images", exist_ok=True)
