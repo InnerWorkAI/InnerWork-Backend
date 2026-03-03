@@ -6,6 +6,6 @@ router = APIRouter(
     tags=["Test"]
 )
 
-@router.get("/ping")
+@router.api_route("/ping", methods=["GET", "HEAD"])
 def test_endpoint():
     return {"message": "Ping successful!"}
