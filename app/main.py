@@ -78,7 +78,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://web.innerwork-ai.es",
-        "http://localhost:4200"],
+        "http://localhost:4200",
+        "https://uptimerobot.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
