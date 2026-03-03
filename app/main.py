@@ -77,7 +77,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://web.innerwork-ai.es"
+        "https://web.innerwork-ai.es",
         "http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
