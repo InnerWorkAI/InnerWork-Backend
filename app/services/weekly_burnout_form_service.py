@@ -41,8 +41,13 @@ class WeeklyBurnoutFormService:
         )
 
     @staticmethod
-    async def create_form(db: Session, current_user_id: int, form_data: WeeklyBurnoutFormCreateBase,
-                    images: Optional[List[UploadFile]], audio: Optional[UploadFile]):
+    async def create_form(
+        db: Session,
+        current_user_id: int,
+        form_data: WeeklyBurnoutFormCreateBase,
+        images: Optional[List[UploadFile]],
+        audio: Optional[UploadFile]
+    ):
         employee = EmployeeService.get_current_employee(db, current_user_id)
         if not employee:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
@@ -51,13 +56,14 @@ class WeeklyBurnoutFormService:
 
         image_score_int = 0
         if images:
-            scores = []
+            valid_image_bytes = []
             for image in images:
                 if image.filename and image.content_type.startswith("image/"):
-                    image_bytes = image.file.read()
-                    scores.append(int(ImagePredictorService.predict_image(image_bytes)["stress_percentage"] * 100))
-            if scores:
-                image_score_int = sum(scores) // len(scores)
+                    valid_image_bytes.append(image.file.read())
+            
+            if valid_image_bytes:
+                predictions = ImagePredictorService.predict_images_batch(valid_image_bytes)
+                image_score_int = sum(int(p["stress_percentage"] * 100) for p in predictions) // len(predictions)
 
         text_score_int = 0
         transcribed_text = None
@@ -67,7 +73,7 @@ class WeeklyBurnoutFormService:
             audio_bytes = audio.file.read()
             audio_result = await AudioTranscriptionService.test_audio_prediction(audio_bytes)
             transcribed_text = audio_result["transcribed_text"]
-            text_score_int = int(audio_result["burnout_score"] * 100)  # ✅ CORRECTO
+            text_score_int = int(audio_result["burnout_score"] * 100)
 
         scores = [form_score_int]
         if image_score_int > 0:
@@ -87,6 +93,7 @@ class WeeklyBurnoutFormService:
             burnout_score=burnout_score_string,
             final_burnout_score=final_burnout_score
         )
+
         return WeeklyBurnoutFormRepository.create(db, form_create_data)
 
     @staticmethod
