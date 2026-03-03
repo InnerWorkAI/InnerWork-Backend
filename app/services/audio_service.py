@@ -46,7 +46,6 @@ class AudioTranscriptionService:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
 
-    # 🔹 GUARDA EN BD
     @staticmethod
     async def process_audio_to_text(form_id: int, audio_bytes: bytes):
 
@@ -69,15 +68,12 @@ class AudioTranscriptionService:
             "burnout_score": score
         }
 
-    # 🔹 SOLO TEST (NO BD)
     @staticmethod
-    async def test_audio_prediction(audio_bytes: bytes):
-
+    async def test_audio_prediction(audio_bytes: bytes):    
         transcribed_text = await AudioTranscriptionService._transcribe_with_groq(audio_bytes)
-
-        score = round(TextAnalysisService.analyze_text(transcribed_text), 4)
-
+        probs = TextAnalysisService.analyze_text(transcribed_text)
+        burnout_score = round(probs.get("1", 0.0), 4)
         return {
             "transcribed_text": transcribed_text,
-            "burnout_score": score
+            "burnout_score": burnout_score
         }

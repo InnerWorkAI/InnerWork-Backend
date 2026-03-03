@@ -1,16 +1,18 @@
-from app.services.employee_service import EmployeeService
-from typing import List, Optional 
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status, UploadFile, BackgroundTasks
-from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
-from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateBase, WeeklyBurnoutFormCreate
-from app.models.user_model import UserModel
-from app.models.employee_model import EmployeeModel
-from app.models.company_model import CompanyModel
-from app.models.company_admin_model import CompanyAdminModel
+from typing import List, Optional
+
+from app.services.employee_service import EmployeeService
 from app.services.audio_service import AudioTranscriptionService
 from app.services.image_predictor_service import ImagePredictorService
-from app.services.form_analysis_service import FormAnalysisService  
+from app.services.form_analysis_service import FormAnalysisService
+
+from app.models.user_model import UserModel
+from app.models.employee_model import EmployeeModel
+from app.models.company_admin_model import CompanyAdminModel
+from app.repositories.weekly_burnout_form_repository import WeeklyBurnoutFormRepository
+from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreateBase, WeeklyBurnoutFormCreate
+
 
 class WeeklyBurnoutFormService:
     @staticmethod
@@ -39,64 +41,41 @@ class WeeklyBurnoutFormService:
         )
 
     @staticmethod
-    def create_form(
-        db: Session, 
-        current_user_id: int, 
-        form_data: WeeklyBurnoutFormCreateBase,
-        images: Optional[List[UploadFile]],
-        audio: Optional[UploadFile],
-        background_tasks: BackgroundTasks
-    ):
+    async def create_form(db: Session, current_user_id: int, form_data: WeeklyBurnoutFormCreateBase,
+                    images: Optional[List[UploadFile]], audio: Optional[UploadFile]):
         employee = EmployeeService.get_current_employee(db, current_user_id)
-
         if not employee:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail="Employee not found"
-            )
-            
-        company = db.query(CompanyModel).filter(CompanyModel.id == employee.company_id).first()
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        calculated_form_score = FormAnalysisService.predict_burnout(form_data, employee, company)
-        form_score_int = int(calculated_form_score * 100)
-        
+        form_score_int = int(FormAnalysisService.predict_burnout(form_data, employee, None) * 100)
+
         image_score_int = 0
         if images:
+            scores = []
             for image in images:
-                if image.filename and image.content_type:
-                    if not image.content_type.startswith("image/"):
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST, 
-                            detail=f"The file {image.filename} is not a valid image"
-                        )
+                if image.filename and image.content_type.startswith("image/"):
                     image_bytes = image.file.read()
-                    img_res = ImagePredictorService.predict_image(image_bytes)
-                    image_score_int = int(img_res["stress_percentage"] * 100)
-                    break 
+                    scores.append(int(ImagePredictorService.predict_image(image_bytes)["stress_percentage"] * 100))
+            if scores:
+                image_score_int = sum(scores) // len(scores)
 
         text_score_int = 0
         transcribed_text = None
         if audio and audio.filename:
             if not audio.content_type.startswith("audio/"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, 
-                    detail="The audio file is not valid"
-                )
-
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Audio file invalid")
             audio_bytes = audio.file.read()
-            audio_res = AudioTranscriptionService.test_audio_prediction(audio_bytes)
-            text_score_int = int(audio_res["burnout_score"] * 100)
-            transcribed_text = audio_res["transcribed_text"]
+            audio_result = await AudioTranscriptionService.test_audio_prediction(audio_bytes)
+            transcribed_text = audio_result["transcribed_text"]
+            text_score_int = int(audio_result["burnout_score"] * 100)  # ✅ CORRECTO
 
-        final_score_string = f"{image_score_int}, {text_score_int}, {form_score_int}"
-        
-        valid_scores = [form_score_int]
+        scores = [form_score_int]
         if image_score_int > 0:
-            valid_scores.append(image_score_int)
+            scores.append(image_score_int)
         if text_score_int > 0:
-            valid_scores.append(text_score_int)
-            
-        final_burnout_score = sum(valid_scores) / len(valid_scores)
+            scores.append(text_score_int)
+        final_burnout_score = round(sum(scores) / len(scores), 2)
+        burnout_score_string = f"{image_score_int}, {text_score_int}, {form_score_int}"
 
         form_create_data = WeeklyBurnoutFormCreate(
             **form_data.model_dump(),
@@ -105,12 +84,10 @@ class WeeklyBurnoutFormService:
             image_score=image_score_int,
             text_score=text_score_int,
             form_score=form_score_int,
-            burnout_score=final_score_string,
-            final_burnout_score=round(final_burnout_score, 2)
+            burnout_score=burnout_score_string,
+            final_burnout_score=final_burnout_score
         )
-        created_form = WeeklyBurnoutFormRepository.create(db, form_create_data)
-
-        return created_form
+        return WeeklyBurnoutFormRepository.create(db, form_create_data)
 
     @staticmethod
     def get_all_forms(db: Session, current_user: UserModel):

@@ -26,30 +26,23 @@ class TextAnalysisService:
     @classmethod
     def _load_models(cls):
         if cls._vectorizer is None or cls._model is None:
-            print("[INFO] Loading text analysis models into memory...")
             cls._vectorizer = joblib.load(VECTORIZER_PATH)
             cls._model = joblib.load(MODEL_PATH)
             print("[INFO] Text models loaded successfully.")
             print(f"[INFO] Model classes: {cls._model.classes_}")
 
     @classmethod
-    def analyze_text(cls, text: str) -> float:
+    def analyze_text(cls, text: str) -> dict:
         if not text:
-            return 0.0
+            return {"0": 0.0, "1": 0.0}
 
         cls._load_models()
 
         clean_text = preprocess_text(text)
-
         text_features = cls._vectorizer.transform([clean_text])
 
         probabilities = cls._model.predict_proba(text_features)[0]
-
         classes = cls._model.classes_
-        burnout_index = list(classes).index(1)
 
-        burnout_probability = float(probabilities[burnout_index])
-
-        print(f"[INFO] Burnout probability (class=1): {burnout_probability:.4f}")
-
-        return burnout_probability
+        result = {str(classes[i]): float(probabilities[i]) for i in range(len(classes))}
+        return result
