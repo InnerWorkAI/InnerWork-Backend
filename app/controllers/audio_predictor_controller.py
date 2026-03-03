@@ -14,7 +14,7 @@ async def predict_burnout_from_audio(file: UploadFile = File(...)):
 
     try:
         file_bytes = await file.read()
-        result = AudioTranscriptionService.test_audio_prediction(file_bytes)
+        result = await AudioTranscriptionService.test_audio_prediction(file_bytes)
         return {
             "filename": file.filename,
             "prediction": result

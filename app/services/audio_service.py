@@ -1,98 +1,83 @@
+import httpx
+import tempfile
 import os
+from app.core.config import settings
+from app.services.text_analysis_service import TextAnalysisService
 from app.db.session import SessionLocal
 from app.models.weekly_burnout_form_model import WeeklyBurnoutFormModel
-from app.services.text_analysis_service import TextAnalysisService
+
 
 class AudioTranscriptionService:
-    _whisper_model = None
 
-    @classmethod
-    def _get_whisper_model(cls):
-        if cls._whisper_model is None:
-            import whisper
-            import torch  
-
-            print("[INFO] Loading Whisper 'tiny' model into memory...")
-
-            torch.set_num_threads(1)  # limitar threads
-
-            cls._whisper_model = whisper.load_model("tiny", device="cpu")
-
-            print("[INFO] Whisper model ready.")
-
-        return cls._whisper_model
+    GROQ_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 
     @staticmethod
-    def process_audio_to_text(form_id: int, audio_bytes: bytes):
-        import tempfile
-        import gc      
+    async def _transcribe_with_groq(audio_bytes: bytes) -> str:
+        headers = {
+            "Authorization": f"Bearer {settings.GROQ_API_KEY}"
+        }
 
-        model = AudioTranscriptionService._get_whisper_model()
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp_file:
-            tmp_file.write(audio_bytes)
-            tmp_file_path = tmp_file.name
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+            tmp.write(audio_bytes)
+            tmp_path = tmp.name
 
         try:
-            result = model.transcribe(
-                tmp_file_path,
-                task="transcribe",
-                fp16=False,
-                language="en"
-            )
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                with open(tmp_path, "rb") as f:
+                    response = await client.post(
+                        AudioTranscriptionService.GROQ_URL,
+                        headers=headers,
+                        files={"file": f},
+                        data={
+                            "model": "whisper-large-v3-turbo",
+                            "language": "en"
+                        }
+                    )
 
-            transcribed_text = result["text"].strip()
+            response.raise_for_status()
+            data = response.json()
 
-            score = TextAnalysisService.analyze_text(transcribed_text)
-            score = round(score, 4)
+            if "text" not in data:
+                raise Exception(f"Groq response error: {data}")
 
-            with SessionLocal() as db:
-                form = db.query(WeeklyBurnoutFormModel).filter(
-                    WeeklyBurnoutFormModel.id == form_id
-                ).first()
-
-                if form:
-                    form.written_feedback = transcribed_text
-                    form.burnout_score = score
-                    db.commit()
+            return data["text"].strip()
 
         finally:
-            if os.path.exists(tmp_file_path):
-                os.remove(tmp_file_path)
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
-            del result
-            gc.collect()
-
+    # 🔹 GUARDA EN BD
     @staticmethod
-    def test_audio_prediction(audio_bytes: bytes):
-        import tempfile
-        import gc
+    async def process_audio_to_text(form_id: int, audio_bytes: bytes):
 
-        model = AudioTranscriptionService._get_whisper_model()
+        transcribed_text = await AudioTranscriptionService._transcribe_with_groq(audio_bytes)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp_file:
-            tmp_file.write(audio_bytes)
-            tmp_file_path = tmp_file.name
+        score = round(TextAnalysisService.analyze_text(transcribed_text), 4)
 
-        try:
-            result = model.transcribe(
-                tmp_file_path,
-                task="transcribe",
-                fp16=False,
-                language="en"
-            )
+        with SessionLocal() as db:
+            form = db.query(WeeklyBurnoutFormModel).filter(
+                WeeklyBurnoutFormModel.id == form_id
+            ).first()
 
-            transcribed_text = result["text"].strip()
-            score = TextAnalysisService.analyze_text(transcribed_text)
+            if form:
+                form.written_feedback = transcribed_text
+                form.burnout_score = score
+                db.commit()
 
-            return {
-                "transcribed_text": transcribed_text,
-                "burnout_score": round(score, 4)
-            }
+        return {
+            "transcribed_text": transcribed_text,
+            "burnout_score": score
+        }
 
-        finally:
-            if os.path.exists(tmp_file_path):
-                os.remove(tmp_file_path)
+    # 🔹 SOLO TEST (NO BD)
+    @staticmethod
+    async def test_audio_prediction(audio_bytes: bytes):
 
-            del result
-            gc.collect()
+        transcribed_text = await AudioTranscriptionService._transcribe_with_groq(audio_bytes)
+
+        score = round(TextAnalysisService.analyze_text(transcribed_text), 4)
+
+        return {
+            "transcribed_text": transcribed_text,
+            "burnout_score": score
+        }
