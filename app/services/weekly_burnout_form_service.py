@@ -98,7 +98,7 @@ class WeeklyBurnoutFormService:
 
     @staticmethod
     def get_all_forms(db: Session, current_user: UserModel):
-        return WeeklyBurnoutFormRepository.get_all(db)
+        return WeeklyBurnoutFormRepository.get_all_by_admin_id(db, current_user.id)
 
     @staticmethod
     def get_form_by_id(db: Session, form_id: int, current_user: UserModel):
