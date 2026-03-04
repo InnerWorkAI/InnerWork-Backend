@@ -9,6 +9,11 @@
 
 Este repositorio contiene el código fuente del backend para la plataforma **InnerWork AI**, una API RESTful desarrollada en **FastAPI**. Su propósito principal es gestionar entidades empresariales (usuarios, empresas, empleados) y proveer servicios avanzados de **Machine Learning** enfocados en la evaluación predictiva de estrés y riesgo de burnout (desgaste laboral).
 
+## Arquitectura y Flujo de Datos
+A continuación se ilustra el flujo de la información, desde la interacción inicial del empleado hasta la decisión final tomada por el Agente de IA Administrativo:
+<img width="6385" height="8192" alt="diagrama_flujo" src="https://github.com/user-attachments/assets/66177657-bba4-497c-8d88-534313d2226d" />
+
+
 ## Modelos de Machine Learning Implementados
 
 El sistema integra predicciones provenientes de modelos de inteligencia artificial pre-entrenados del componente `app/ml_models`, los cuales son consumidos a través de endpoints específicos:
