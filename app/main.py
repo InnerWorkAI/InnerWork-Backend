@@ -76,16 +76,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://web.innerwork-ai.es",
-        "http://localhost:4200",
-        "https://uptimerobot.com"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Create uploads directory if it doesn't exist
 os.makedirs("uploads/profile_images", exist_ok=True)
