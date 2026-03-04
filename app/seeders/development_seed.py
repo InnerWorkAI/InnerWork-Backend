@@ -22,10 +22,6 @@ from app.enums.marital_status import MaritalStatusEnum
 
 
 def run_development_seed():
-    if settings.ENV != "development":
-        print("Seeder solo permitido en entorno development")
-        return
-
     db: Session = SessionLocal()
     try:
         print("Iniciando Development Seed...")
@@ -50,7 +46,7 @@ def run_development_seed():
         # ==========================
         primary_admin_user = UserModel(
             email="admin@tech.com",
-            password=hash_password("1234")
+            password=hash_password(settings.ADMIN_PASSWORD)
         )
         db.add(primary_admin_user)
         db.commit()
@@ -68,7 +64,7 @@ def run_development_seed():
         # ==========================
         secondary_admin_user = UserModel(
             email="hr@tech.com",
-            password=hash_password("1234")
+            password=hash_password(settings.ADMIN_PASSWORD)
         )
         db.add(secondary_admin_user)
         db.commit()

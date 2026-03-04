@@ -53,9 +53,8 @@ async def lifespan(app: FastAPI):
     logger.info("Database tables created.")
 
     # Run development seed if in development environment
-    if settings.ENV == "development":
-        logger.info("Running development seed...")
-        run_development_seed()
+    logger.info("Running development seed...")
+    run_development_seed()
 
     # Start scheduler
     logger.info("Starting background scheduler...")

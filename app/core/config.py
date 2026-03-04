@@ -21,4 +21,6 @@ class Settings(BaseSettings):
 
     GROQ_API_KEY: str
 
+    ADMIN_PASSWORD: str
+
 settings = Settings(_env_file=f".env.{os.getenv('ENV', 'development')}")
