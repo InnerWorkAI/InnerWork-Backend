@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from app.models.company_admin_model import CompanyAdminModel
+from app.models.employee_model import EmployeeModel
 from sqlalchemy.orm import Session
 from app.models.weekly_burnout_form_model import WeeklyBurnoutFormModel
 from app.schemas.weekly_burnout_form_schema import WeeklyBurnoutFormCreate
@@ -16,6 +18,17 @@ class WeeklyBurnoutFormRepository:
     @staticmethod
     def get_all(db: Session):
         return db.query(WeeklyBurnoutFormModel).all()
+
+    @staticmethod
+    def get_all_by_admin_id(db: Session, admin_id: int):
+
+        return (
+            db.query(WeeklyBurnoutFormModel)
+            .join(EmployeeModel, WeeklyBurnoutFormModel.employee_id == EmployeeModel.id)
+            .join(CompanyAdminModel, CompanyAdminModel.company_id == EmployeeModel.company_id)
+            .filter(CompanyAdminModel.user_id == admin_id)
+            .all()
+        )
 
     @staticmethod
     def get_by_id(db: Session, form_id: int):
