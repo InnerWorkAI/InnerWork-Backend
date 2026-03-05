@@ -1,5 +1,5 @@
 import random
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
@@ -21,79 +21,151 @@ from app.enums.job_role import JobRoleEnum
 from app.enums.marital_status import MaritalStatusEnum
 
 
+FIRST_NAMES = ["Carlos", "Lucía", "Miguel", "Sofía", "Javier",
+               "Elena", "Andrés", "Marta", "David", "Paula"]
+
+LAST_NAMES = ["García", "Martínez", "López", "Fernández",
+              "Rodríguez", "Sánchez", "Pérez", "Gómez"]
+
+CITIES = ["Madrid", "Barcelona", "Valencia", "Sevilla", "Bilbao"]
+
+STREETS = [
+    "Calle Gran Vía 45, Madrid",
+    "Av. Diagonal 640, Barcelona",
+    "Calle Colón 12, Valencia",
+    "Av. de la Constitución 18, Sevilla",
+    "Calle Larios 7, Málaga"
+]
+
+
+# ==========================
+# SCORE GENERATOR
+# ==========================
+
+def generate_realistic_scores(high_risk=False, progression_factor=0):
+
+    if high_risk:
+        base = 60 + progression_factor * 35
+    else:
+        base = 25 + progression_factor * 20
+
+    image_score = max(5, min(100, int(random.gauss(base, 5))))
+    text_score = max(5, min(100, int(random.gauss(base, 7))))
+    form_score = max(5, min(100, int(random.gauss(base, 6))))
+
+    final_score = round((image_score + text_score + form_score) / 3, 2)
+    burnout_score = f"{image_score}, {text_score}, {form_score}"
+
+    return image_score, text_score, form_score, burnout_score, final_score
+
+
+# ==========================
+# MAIN SEED
+# ==========================
+
 def run_development_seed():
     db: Session = SessionLocal()
-    try:
-        print("Iniciando Development Seed...")
 
-        if db.query(UserModel).count() > 0 or db.query(CompanyModel).count() > 0:
-            print("Base de datos ya tiene datos, seed omitido.")
+    try:
+        print("🚀 Iniciando Development Seed...")
+
+        if db.query(UserModel).count() > 0:
+            print("⚠ Base de datos ya tiene datos, seed omitido.")
             return
 
         # ==========================
-        # 1️⃣ Crear Empresa
+        # 1️⃣ Empresa
         # ==========================
         company = CompanyModel(
-            name="Tech Solutions Inc",
-            address="Av. Innovación 123, Ciudad Tech"
+            name="NovaTech Solutions SL",
+            address=random.choice(STREETS)
         )
         db.add(company)
         db.commit()
         db.refresh(company)
 
         # ==========================
-        # 2️⃣ Crear Admin Principal
+        # 2️⃣ Admin Principal
         # ==========================
-        primary_admin_user = UserModel(
+        admin_user = UserModel(
             email="admin@tech.com",
             password=hash_password(settings.ADMIN_PASSWORD)
         )
-        db.add(primary_admin_user)
+        db.add(admin_user)
         db.commit()
-        db.refresh(primary_admin_user)
+        db.refresh(admin_user)
 
-        primary_admin = CompanyAdminModel(
-            user_id=primary_admin_user.id,
+        db.add(CompanyAdminModel(
+            user_id=admin_user.id,
             company_id=company.id,
             is_primary_admin=True
-        )
-        db.add(primary_admin)
+        ))
 
         # ==========================
-        # 3️⃣ Crear Admin Secundario
+        # 3️⃣ Admin RRHH
         # ==========================
-        secondary_admin_user = UserModel(
-            email="hr@tech.com",
+        hr_user = UserModel(
+            email="rrhh@tech.com",
             password=hash_password(settings.ADMIN_PASSWORD)
         )
-        db.add(secondary_admin_user)
+        db.add(hr_user)
         db.commit()
-        db.refresh(secondary_admin_user)
+        db.refresh(hr_user)
 
-        secondary_admin = CompanyAdminModel(
-            user_id=secondary_admin_user.id,
+        db.add(CompanyAdminModel(
+            user_id=hr_user.id,
             company_id=company.id,
             is_primary_admin=False
-        )
-        db.add(secondary_admin)
+        ))
+
         db.commit()
 
         # ==========================
-        # 4️⃣ Crear Empleados
+        # 4️⃣ Empleados FULL DATA
         # ==========================
         employees = []
 
-        genders = [GenderEnum.FEMALE, GenderEnum.MALE]
-        departments = list(DepartmentEnum)
-        job_roles = list(JobRoleEnum)
-        job_levels = list(JobLevelEnum)
-        educations = list(EducationEnum)
-        education_fields = list(EducationFieldEnum)
-        marital_statuses = list(MaritalStatusEnum)
+        for i in range(8):
 
-        for i in range(1, 9):
+            first_name = random.choice(FIRST_NAMES)
+            last_name = random.choice(LAST_NAMES)
+
+            # Edad realista
+            age = random.randint(26, 45)
+            birth_year = datetime.now().year - age
+
+            birth_date = date(
+                birth_year,
+                random.randint(1, 12),
+                random.randint(1, 28)
+            )
+
+            # Antigüedad empresa
+            years_in_company = random.randint(1, 10)
+            contract_start_date = date(
+                datetime.now().year - years_in_company,
+                random.randint(1, 12),
+                random.randint(1, 28)
+            )
+
+            current_role_start_date = contract_start_date + timedelta(days=random.randint(180, 900))
+
+            last_promotion_date = current_role_start_date + timedelta(days=random.randint(200, 700))
+            if last_promotion_date > datetime.now().date():
+                last_promotion_date = None
+
+            last_manager_date = contract_start_date + timedelta(days=random.randint(200, 1200))
+            if last_manager_date > datetime.now().date():
+                last_manager_date = None
+
+            # Género coherente con imagen
+            gender_value = random.choice(list(GenderEnum)).value
+            image_gender_folder = "men" if gender_value == GenderEnum.MALE.value else "women"
+            image_number = random.randint(0, 99)
+            profile_image_url = f"https://randomuser.me/api/portraits/{image_gender_folder}/{image_number}.jpg"
+
             user = UserModel(
-                email=f"employee{i}@tech.com",
+                email=f"{first_name.lower()}.{last_name.lower()}{i}@tech.com",
                 password=hash_password("1234")
             )
             db.add(user)
@@ -103,54 +175,91 @@ def run_development_seed():
             employee = EmployeeModel(
                 user_id=user.id,
                 company_id=company.id,
-                first_name=f"Empleado{i}",
-                last_name="Test",
-                birth_date=date(1990, 1, i),
-                gender=random.choice(genders).value,
-                marital_status=random.choice(marital_statuses).value,
-                department=random.choice(departments).value,
-                education=random.choice(educations).value,
-                education_field=random.choice(education_fields).value,
-                job_level=random.choice(job_levels).value,
-                job_role=random.choice(job_roles).value,
-                monthly_salary=3000 + i * 500,
-                percent_salary_hike=random.randint(5, 15)
+
+                first_name=first_name,
+                last_name=last_name,
+                birth_date=birth_date,
+
+                gender=gender_value,
+                marital_status=random.choice(list(MaritalStatusEnum)).value,
+
+                home_address=f"Calle {last_name} {random.randint(1, 120)}, {random.choice(CITIES)}",
+                phone=f"+34 6{random.randint(10000000, 99999999)}",
+                profile_image_url=profile_image_url,
+
+                department=random.choice(list(DepartmentEnum)).value,
+                education=random.choice(list(EducationEnum)).value,
+                education_field=random.choice(list(EducationFieldEnum)).value,
+                job_level=random.choice(list(JobLevelEnum)).value,
+                job_role=random.choice(list(JobRoleEnum)).value,
+
+                number_of_companies_worked=random.randint(1, 4),
+
+                contract_start_date=contract_start_date,
+                current_role_start_date=current_role_start_date,
+                last_promotion_date=last_promotion_date,
+                last_manager_date=last_manager_date,
+
+                monthly_salary=random.randint(2800, 6500),
+                percent_salary_hike=round(random.uniform(5, 18), 2),
+
+                created_at=contract_start_date
             )
+
             db.add(employee)
             db.commit()
             db.refresh(employee)
             employees.append(employee)
 
         # ==========================
-        # 5️⃣ Crear Formularios
+        # 5️⃣ Formularios (16 semanas)
         # ==========================
-        for idx, employee in enumerate(employees):
-            high_risk = idx == 0  # Solo un empleado con alto riesgo para simular "isolated employee burnout"
+        weeks_history = 16
 
-            for week in range(4):  # 4 semanas
-                created_date = date.today() - timedelta(days=7 * week)
-                burnout_score = (
-                    round(random.uniform(85, 100), 2) if high_risk
-                    else round(random.uniform(20, 60), 2)
-                )
+        for idx, employee in enumerate(employees):
+
+            high_risk = idx == 0
+
+            for week in range(weeks_history):
+
+                progression = week / weeks_history
+
+                image_score, text_score, form_score, burnout_score, final_score = \
+                    generate_realistic_scores(high_risk, progression)
+
+                created_date = datetime.now() - timedelta(days=7 * (weeks_history - week))
 
                 form = WeeklyBurnoutFormModel(
                     employee_id=employee.id,
-                    written_feedback="Mucho estrés reciente" if high_risk else "Semana normal",
-                    environment_satisfaction=1 if high_risk else 4,
-                    overtime=1 if high_risk else 0,
-                    job_involvement=4,
-                    performance_rating=3,
-                    job_satisfaction=1 if high_risk else 4,
-                    work_life_balance=1 if high_risk else 4,
-                    business_travel=2 if high_risk else 0,
-                    burnout_score=str(burnout_score),
-                    final_burnout_score=burnout_score,
+
+                    written_feedback=(
+                        "Estoy agotado y me cuesta desconectar del trabajo."
+                        if high_risk and progression > 0.6
+                        else "Semana productiva con carga manejable."
+                    ),
+
+                    environment_satisfaction=random.randint(1, 5),
+                    overtime=random.randint(0, 1),
+                    job_involvement=random.randint(2, 4),
+                    performance_rating=random.randint(2, 4),
+                    job_satisfaction=random.randint(1, 5),
+                    work_life_balance=random.randint(1, 5),
+                    business_travel=random.randint(0, 2),
+
+                    image_score=image_score,
+                    text_score=text_score,
+                    form_score=form_score,
+
+                    burnout_score=burnout_score,
+                    final_burnout_score=final_score,
+
                     created_at=created_date
                 )
+
                 db.add(form)
 
         db.commit()
+        print("✅ Seed completado correctamente.")
 
     except Exception as e:
         db.rollback()

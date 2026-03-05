@@ -1,7 +1,6 @@
 from sqlalchemy import DateTime
 from sqlalchemy.sql import func
 from sqlalchemy import Column, Integer, Float, Text, ForeignKey, String
-from datetime import datetime
 from app.db.base import Base
 
 class WeeklyBurnoutFormModel(Base):
