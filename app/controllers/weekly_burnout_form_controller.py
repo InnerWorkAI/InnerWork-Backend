@@ -18,6 +18,7 @@ router = APIRouter(
 
 @router.post("/", response_model=WeeklyBurnoutFormResponse, status_code=201)
 async def create_burnout_form(
+    background_tasks: BackgroundTasks,
     form_data: WeeklyBurnoutFormCreateBase = Depends(WeeklyBurnoutFormCreateBase.as_form),
     images: List[UploadFile] = File(default=[], description="Optional list of images"),
     audio: Optional[UploadFile] = File(None, description="Optional audio file for transcription"),
@@ -32,7 +33,16 @@ async def create_burnout_form(
         audio=audio
     )
 
+    company_id = db.query(EmployeeModel.company_id).filter(EmployeeModel.id == form.employee_id).scalar()
+
+    background_tasks.add_task(
+        BurnoutAgent.run,
+        company_id,
+        db
+    )
+
     return form
+
 
 @router.get("/", response_model=List[WeeklyBurnoutFormResponse])
 def get_burnout_forms(
