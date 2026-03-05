@@ -160,9 +160,6 @@ def run_development_seed():
 
             # Género coherente con imagen
             gender_value = random.choice(list(GenderEnum)).value
-            image_gender_folder = "men" if gender_value == GenderEnum.MALE.value else "women"
-            image_number = random.randint(0, 99)
-            profile_image_url = f"https://randomuser.me/api/portraits/{image_gender_folder}/{image_number}.jpg"
 
             user = UserModel(
                 email=f"{first_name.lower()}.{last_name.lower()}{i}@tech.com",
@@ -185,7 +182,7 @@ def run_development_seed():
 
                 home_address=f"Calle {last_name} {random.randint(1, 120)}, {random.choice(CITIES)}",
                 phone=f"+34 6{random.randint(10000000, 99999999)}",
-                profile_image_url=profile_image_url,
+                profile_image_url="",
 
                 department=random.choice(list(DepartmentEnum)).value,
                 education=random.choice(list(EducationEnum)).value,
